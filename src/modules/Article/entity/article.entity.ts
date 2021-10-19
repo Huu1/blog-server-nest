@@ -20,12 +20,21 @@ export class Article {
   @Column({ default: 'chenguanxi.png' })
   brief: string;
 
-  @Column({ default: 'user' })
+  @Column({  })
   background: string;
 
-  @Column({ default: 'on' })
-  status: string;
+  // 1:草稿  2:待审核  3:已发布
+  @Column({ default: 1 })
+  status: number;
 
   @Column({ type: 'double', default: new Date().valueOf() })
   createTime: number;
+
+  // 最后编辑时间
+  @Column({ type: 'double', default: new Date().valueOf() })
+  lastUpdateTime: number;
+
+  // 访问次数
+  @Column({ default: 0 })
+  viewNum: number;
 }
