@@ -67,8 +67,10 @@ export class ArticleService {
 
   }
 
-  async deleteArticle(article: ArticleDto) {
+  async deleteArticle(article: any) {
     const { uid, articleId } = article;
+
+    console.log(uid, articleId);
 
     const target = await this.articleRepository.findOne({ articleId, uid, status: 1 });
 
@@ -133,12 +135,12 @@ export class ArticleService {
 
   }
   async userPublishArticle(article: ArticleDto) {
-    const { articleId } = article;
+    const { articleId, background, tid } = article;
 
     const oldArticle = await this.articleRepository.findOne({ articleId, status: 1, uid: article.uid });
 
     if (oldArticle) {
-      await this.articleRepository.update(oldArticle, { ...oldArticle, status: 2 });
+      await this.articleRepository.update(oldArticle, { ...oldArticle, background, tid, status: 2 });
       return new Echo(
         RCode.OK,
         null,

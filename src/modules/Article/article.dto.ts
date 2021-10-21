@@ -3,7 +3,7 @@ export class ArticleDto {
   content: string;
   brief: string;
   background: string;
-  tagId: string;
+  tid: string;
   uid: string;
   articleId: string;
 }
