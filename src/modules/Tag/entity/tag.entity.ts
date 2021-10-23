@@ -14,6 +14,9 @@ export class Tag {
   @Column({ default: 'on' })
   status: string;
 
+  @Column({ default: 'magenta' })
+  color: string;
+
   @Column({ type: 'double', default: new Date().valueOf() })
   createTime: number;
 }

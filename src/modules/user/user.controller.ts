@@ -1,6 +1,8 @@
-import { Controller, Post, Get, 
+import {
+  Controller, Post, Get,
   Body, Query, Patch, Param, Delete, UseInterceptors,
-  UploadedFile, UseGuards } from '@nestjs/common';
+  UploadedFile, UseGuards, Req
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
@@ -10,7 +12,7 @@ import { Role } from '../auth/role.enum';
 @Controller('user')
 @UseGuards(AuthGuard('jwt'))
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get()
   @Roles(Role.Admin)
@@ -49,9 +51,10 @@ export class UserController {
   }
 
   @Post('/avatar')
-  @UseInterceptors(FileInterceptor('avatar'))
-  setUserAvatar(@Body() user, @UploadedFile() file) {
-    return this.userService.setUserAvatar(user, file);
+  @Roles(Role.User)
+  @UseInterceptors(FileInterceptor('file'))
+  setUserAvatar(@Body() user, @UploadedFile() file, @Req() req) {
+    return this.userService.setUserAvatar({ ...user, uid: req.uid }, file);
   }
 
 }

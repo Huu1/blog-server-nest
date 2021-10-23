@@ -8,7 +8,7 @@ export class Article {
   @Column()
   uid: string;
 
-  @Column()
+  @Column({ default: 1 })
   tid: string;
 
   @Column({ default: '' })
@@ -23,7 +23,7 @@ export class Article {
   @Column({  })
   background: string;
 
-  // 1:草稿  2:待审核  3:已发布
+  // 1:草稿  2:待审核  3:已发布  4:驳回
   @Column({ default: 1 })
   status: number;
 

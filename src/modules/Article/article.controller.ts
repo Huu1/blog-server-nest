@@ -8,6 +8,7 @@ import { ArticleService } from './article.service';
 import { ArticleDto } from './article.dto';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('article')
 export class ArticleController {
@@ -27,13 +28,13 @@ export class ArticleController {
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
   getAllDraft(@Req() req) {
-    return this.articleService.getAllDraft( req.uid );
+    return this.articleService.getAllDraft(req.uid);
   }
 
   // 获取所有已发布文章
   @Get('allDraft')
   getAllPublishArticle(@Param() uid) {
-    return this.articleService.getAllPublishArticle( uid );
+    return this.articleService.getAllPublishArticle(uid);
   }
 
   //查询一篇文章
@@ -62,8 +63,9 @@ export class ArticleController {
   @Post('pushlish')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
-  userPublishArticle(@Body() article: ArticleDto, @Req() req) {
-    return this.articleService.userPublishArticle({ ...article, uid: req.uid });
+  @UseInterceptors(FileInterceptor('file'))
+  userPublishArticle(@Body() article: ArticleDto, @UploadedFile() file, @Req() req) {
+    return this.articleService.userPublishArticle({ ...article, uid: req.uid }, file);
   }
 
   // 管理员审核文章并发布
@@ -80,6 +82,14 @@ export class ArticleController {
   @Roles(Role.Admin)
   backArticle(@Body() article: ArticleDto) {
     return this.articleService.backArticle({ ...article });
+  }
+
+  // 获取用户的所有文章 
+  @Post('queryAll')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  queryAll(@Body() data: any, @Req() req) {
+    return this.articleService.queryAll(data, req.uid);
   }
 
 }

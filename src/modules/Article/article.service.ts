@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, getRepository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './entity/article.entity';
 import { Echo, RCode } from 'src/common/constant/rcode';
 import { ArticleDto } from './article.dto';
 import { JwtService } from '@nestjs/jwt';
+import { createWriteStream } from 'fs';
+import { join } from 'path';
 
 @Injectable()
 export class ArticleService {
@@ -70,8 +72,6 @@ export class ArticleService {
   async deleteArticle(article: any) {
     const { uid, articleId } = article;
 
-    console.log(uid, articleId);
-
     const target = await this.articleRepository.findOne({ articleId, uid, status: 1 });
 
     if (target) {
@@ -88,7 +88,6 @@ export class ArticleService {
         '文章不存在'
       );
     }
-
   }
 
   async backArticle(article: ArticleDto) {
@@ -110,7 +109,6 @@ export class ArticleService {
         '文章不存在'
       );
     }
-
   }
 
   async publishArticle(article: ArticleDto) {
@@ -134,18 +132,31 @@ export class ArticleService {
     }
 
   }
-  async userPublishArticle(article: ArticleDto) {
-    const { articleId, background, tid } = article;
+  async userPublishArticle(article: ArticleDto, file) {
+    const { articleId, tid, uid } = article;
 
-    const oldArticle = await this.articleRepository.findOne({ articleId, status: 1, uid: article.uid });
+    const oldArticle = await this.articleRepository.findOne({ articleId, status: 1, uid });
 
     if (oldArticle) {
-      await this.articleRepository.update(oldArticle, { ...oldArticle, background, tid, status: 2 });
-      return new Echo(
-        RCode.OK,
-        null,
-        '发布成功,待审核中'
-      );
+      let background;
+      try {
+        const random = Date.now() + '&';
+        const stream = createWriteStream(join('public/article', random + file.originalname));
+        stream.write(file.buffer);
+        background = `article/${random}${file.originalname}`;
+      } catch (error) {
+        return { code: RCode.FAIL, msg: '上传图片失败' };
+      }
+      try {
+        await this.articleRepository.update(oldArticle, { ...oldArticle, background, tid, status: 2 });
+        return new Echo(
+          RCode.OK,
+          null,
+          '发布成功,待审核中'
+        );
+      } catch (error) {
+        return { code: RCode.FAIL, msg: '发布失败' };
+      }
     } else {
       return new Echo(
         RCode.FAIL,
@@ -170,6 +181,32 @@ export class ArticleService {
     return new Echo(
       RCode.OK,
       list,
+    );
+  }
+
+  async queryAll(data: any, uid: string) {
+    const { current, pageSize, status, tid} = data;
+    // status 0全部  1:草稿  2:待审核  3:已发布  4:驳回
+    console.log(tid ? "result.tid = :tid" : "result.tid != :tid" ,tid);
+    
+    const result = await getRepository(Article)
+      .createQueryBuilder("result")
+      .orderBy("result.createTime", "DESC")
+      .where("result.uid = :uid", { uid })
+      .andWhere(status ? "result.status = :status" : "result.status != :status", { status })
+      .andWhere(tid ? "result.tid = :tid" : "result.tid != :tid", { tid:tid+'' })
+      .skip(pageSize * (current - 1))
+      .take(pageSize)
+      .getManyAndCount();
+
+    return new Echo(
+      RCode.OK,
+      {
+        list: result[0],
+        total: result[1],
+        current,
+        pageSize
+      },
     );
   }
 }
