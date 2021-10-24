@@ -20,7 +20,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   // 配置静态资源
-  app.useStaticAssets(join(__dirname, '../public', '/'), {
+  app.useStaticAssets(join(__dirname, '../', '/'), {
     prefix: '/', 
     setHeaders: res => {
       res.set('Cache-Control', 'max-age=2592000');

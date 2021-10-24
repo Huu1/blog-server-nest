@@ -32,9 +32,9 @@ export class ArticleController {
   }
 
   // 获取所有已发布文章
-  @Get('allDraft')
-  getAllPublishArticle(@Param() uid) {
-    return this.articleService.getAllPublishArticle(uid);
+  @Get('queryAllPublish/:uid')
+  getAllPublishArticle(@Param() data) {
+    return this.articleService.getAllPublishArticle(data);
   }
 
   //查询一篇文章
@@ -68,12 +68,20 @@ export class ArticleController {
     return this.articleService.userPublishArticle({ ...article, uid: req.uid }, file);
   }
 
-  // 管理员审核文章并发布
-  @Post('audit')
+  // 管理员获取所有用户文章
+  @Post('allArticle')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.Admin)
-  publishArticle(@Body() article: ArticleDto,) {
-    return this.articleService.publishArticle({ ...article });
+  getAllArticle(@Body() data: any) {
+    return this.articleService.getAllArticle(data);
+  }
+
+  // 管理员审核文章
+  @Post('setAudit')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.Admin)
+  setAudit(@Body() param,) {
+    return this.articleService.setAudit(param);
   }
 
   // 管理员下架一篇文章
@@ -84,7 +92,7 @@ export class ArticleController {
     return this.articleService.backArticle({ ...article });
   }
 
-  // 获取用户的所有文章 
+  // 获取当前用户的所有文章 
   @Post('queryAll')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)

@@ -17,7 +17,7 @@ export class Article {
   @Column({ default: '' })
   content: string;
 
-  @Column({ default: 'chenguanxi.png' })
+  @Column({ default: '作者很懒，没有留下什么' })
   brief: string;
 
   @Column({  })
@@ -34,7 +34,15 @@ export class Article {
   @Column({ type: 'double', default: new Date().valueOf() })
   lastUpdateTime: number;
 
+  // 发布时间
+  @Column({ type: 'double', default: 0})
+  publishTime: number;
+
   // 访问次数
   @Column({ default: 0 })
   viewNum: number;
+
+  // 访问次数
+  @Column({ default: '' })
+  rejectInfo: string;
 }

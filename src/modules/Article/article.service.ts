@@ -133,7 +133,7 @@ export class ArticleService {
 
   }
   async userPublishArticle(article: ArticleDto, file) {
-    const { articleId, tid, uid } = article;
+    const { articleId, tid, uid, brief } = article;
 
     const oldArticle = await this.articleRepository.findOne({ articleId, status: 1, uid });
 
@@ -143,12 +143,12 @@ export class ArticleService {
         const random = Date.now() + '&';
         const stream = createWriteStream(join('public/article', random + file.originalname));
         stream.write(file.buffer);
-        background = `article/${random}${file.originalname}`;
+        background = `public/article/${random}${file.originalname}`;
       } catch (error) {
         return { code: RCode.FAIL, msg: '上传图片失败' };
       }
       try {
-        await this.articleRepository.update(oldArticle, { ...oldArticle, background, tid, status: 2 });
+        await this.articleRepository.update(oldArticle, { ...oldArticle, brief, background, tid, status: 2 });
         return new Echo(
           RCode.OK,
           null,
@@ -175,26 +175,15 @@ export class ArticleService {
     );
   }
 
-  async getAllPublishArticle(uid: string) {
-    const list = await this.articleRepository.find({ uid, status: 3 });
-
-    return new Echo(
-      RCode.OK,
-      list,
-    );
-  }
-
-  async queryAll(data: any, uid: string) {
-    const { current, pageSize, status, tid} = data;
-    // status 0全部  1:草稿  2:待审核  3:已发布  4:驳回
-    console.log(tid ? "result.tid = :tid" : "result.tid != :tid" ,tid);
+  async getAllPublishArticle(data: any) {
+    console.log(data);
     
+    const { pageSize = 5, current = 1, uid } = data;
     const result = await getRepository(Article)
       .createQueryBuilder("result")
       .orderBy("result.createTime", "DESC")
-      .where("result.uid = :uid", { uid })
-      .andWhere(status ? "result.status = :status" : "result.status != :status", { status })
-      .andWhere(tid ? "result.tid = :tid" : "result.tid != :tid", { tid:tid+'' })
+      .where("result.status = :status", { status: 3 })
+      .andWhere("result.uid = :uid", { uid })
       .skip(pageSize * (current - 1))
       .take(pageSize)
       .getManyAndCount();
@@ -208,5 +197,75 @@ export class ArticleService {
         pageSize
       },
     );
+  }
+
+  async queryAll(data: any, uid: string) {
+    const { current, pageSize, status, tid } = data;
+    // status 0全部  1:草稿  2:待审核  3:已发布  4:驳回
+
+    const result = await getRepository(Article)
+      .createQueryBuilder("result")
+      .orderBy("result.createTime", "DESC")
+      .where("result.uid = :uid", { uid })
+      .andWhere(status ? "result.status = :status" : "result.status != :status", { status })
+      .andWhere(tid ? "result.tid = :tid" : "result.tid != :tid", { tid: tid + '' })
+      .skip(pageSize * (current - 1))
+      .take(pageSize)
+      .getManyAndCount();
+
+    return new Echo(
+      RCode.OK,
+      {
+        list: result[0],
+        total: result[1],
+        current,
+        pageSize
+      },
+    );
+  }
+
+  async getAllArticle(data) {
+    const { current, pageSize, status, tid } = data;
+    // status 0全部  1:草稿  2:待审核  3:已发布  4:驳回
+    
+    const result = await getRepository(Article)
+      .createQueryBuilder("result")
+      .orderBy("result.createTime", "DESC")
+      .andWhere(status ? "result.status = :status" : "result.status != :status", { status })
+      .andWhere(tid ? "result.tid = :tid" : "result.tid != :tid", { tid: tid + '' })
+      .skip(pageSize * (current - 1))
+      .take(pageSize)
+      .getManyAndCount();
+
+    return new Echo(
+      RCode.OK,
+      {
+        list: result[0],
+        total: result[1],
+        current,
+        pageSize
+      },
+    );
+  }
+
+  async setAudit(param) {
+    const { articleId, status: auditStatus, info } = param;
+    const target = await this.articleRepository.findOne({ status: 2, articleId });
+    if (!target) {
+      return new Echo(
+        RCode.FAIL,
+        null,
+        '未找到此文章'
+      );
+    }
+
+    const status = auditStatus === 1 ? 3 : 4;
+
+    await this.articleRepository.update(target, { ...target, rejectInfo: info, status });
+    return new Echo(
+      RCode.OK,
+      null,
+    );
+
   }
 }
