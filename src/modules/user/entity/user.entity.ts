@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Article } from 'src/modules/Article/entity/article.entity';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
 @Entity()
 export class User {
@@ -25,4 +26,7 @@ export class User {
 
   @Column({type: 'double',default: new Date().valueOf()})
   createTime: number;
+
+  @OneToMany(() => Article, article => article.user)
+  article: Article[];
 }

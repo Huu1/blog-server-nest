@@ -3,19 +3,22 @@ import { Repository, Like, getRepository, getConnection } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './entity/article.entity';
 import { Echo, RCode } from 'src/common/constant/rcode';
-import { ArticleDto, postStatus } from './article.dto';
+import { addArticleDto, ArticleDto, postStatus } from './article.dto';
 import { JwtService } from '@nestjs/jwt';
 import { createWriteStream } from 'fs';
 import { join } from 'path';
 import { Tag } from '../Classic/entity/tag.entity';
 import { Label } from '../Classic/entity/label.entity';
 import { LabelMap } from '../Classic/entity/labelMap.entity';
+import { User } from '../user/entity/user.entity';
 
 @Injectable()
 export class ArticleService {
   constructor(
     @InjectRepository(Article)
     private readonly articleRepository: Repository<Article>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     @InjectRepository(Tag)
     private readonly tagRepository: Repository<Tag>,
     @InjectRepository(Label)
@@ -23,8 +26,9 @@ export class ArticleService {
     @InjectRepository(LabelMap)
     private readonly LabelMapRepository: Repository<LabelMap>,
   ) { }
+
   async findOneArticle(id: string) {
-    const article = await this.articleRepository.findOne({ articleId: id });
+    const article = await this.articleRepository.findOne({ articleId: id }, { relations: ['user'] });
     if (article) {
       if (article.status === postStatus.publish) {
         await this.articleRepository.update(article, { ...article, viewNum: article.viewNum + 1 });
@@ -42,58 +46,79 @@ export class ArticleService {
     }
   }
 
-  async addArticle(article: ArticleDto) {
-    const result = await this.articleRepository.save({ ...article, status: postStatus.draft });
-    return new Echo(
-      RCode.OK,
-      {
-        articleId: result.articleId,
-        uid: result.uid,
-        createTime: result.createTime,
-      },
-    );
-  }
-
-  async editArticle(article: ArticleDto) {
-    const { uid, title, content, articleId } = article;
-
-    const oldArticle = await this.articleRepository.findOne({ articleId, uid, status: postStatus.draft });
-
-    if (oldArticle) {
-      await this.articleRepository.update(oldArticle, {
-        title, content, lastUpdateTime: new Date().valueOf()
-      });
+  async addArticle(articleDto: addArticleDto, uid: string) {
+    try {
+      const article = new Article();
+      article.title = articleDto.title;
+      article.content = articleDto.content;
+      article.status = postStatus.draft;
+      article.user = await this.userRepository.findOne({ userId: uid });
+      const res = await this.articleRepository.save(article);
       return new Echo(
         RCode.OK,
-        null,
+        {
+          articleId: res.articleId,
+          uid: res.user.userId,
+          createTime: res.createTime,
+        },
       );
-    } else {
+    } catch (error) {
+      return new Echo(
+        RCode.FAIL,
+      );
+    }
+  }
+
+  async editArticle(articleDto: ArticleDto) {
+    const { uid, title, content, articleId } = articleDto;
+    try {
+      const article = await this.articleRepository.findOne({ articleId, status: postStatus.draft }, { relations: ["user"] });
+      if (article && article.user.userId === uid) {
+        await this.articleRepository.update(article, {
+          title, content, lastUpdateTime: new Date().valueOf()
+        });
+        return new Echo(
+          RCode.OK,
+          null,
+        );
+      }
       return new Echo(
         RCode.FAIL,
         null,
         '文章不存在'
       );
+    } catch (error) {
+      return new Echo(
+        RCode.ERROR,
+        null,
+        '系统异常'
+      );
     }
-
   }
 
   async deleteArticle(article: any) {
     const { uid, articleId } = article;
 
-    const target = await this.articleRepository.findOne({ articleId, uid, status: postStatus.draft });
-
-    if (target) {
-      await this.articleRepository.remove(target);
-      return new Echo(
-        RCode.OK,
-        null,
-        '删除成功'
-      );
-    } else {
+    // 需要移除文章对应的 map  未完成
+    try {
+      const article = await this.articleRepository.findOne({ articleId, status: postStatus.draft }, { relations: ["user"] });
+      if (article && article.user.userId === uid) {
+        await this.articleRepository.remove(article);
+        return new Echo(
+          RCode.OK,
+          null,
+        );
+      }
       return new Echo(
         RCode.FAIL,
         null,
         '文章不存在'
+      );
+    } catch (error) {
+      return new Echo(
+        RCode.ERROR,
+        null,
+        '系统异常'
       );
     }
   }
@@ -222,23 +247,29 @@ export class ArticleService {
     }
   }
 
-  async getAllDraft(uid: string) {
-    const list = await this.articleRepository.find({ uid, status: postStatus.draft });
+  async getAllDraft(userId: string) {
+    const user = await getRepository(User)
+      .createQueryBuilder("user")
+      .leftJoinAndSelect("user.article", "article", 'article.status= :status', { status: postStatus.draft })
+      .where("user.userId = :userId", { userId })
+      .orderBy("article.createTime", "DESC")
+      .getOne();
 
     return new Echo(
       RCode.OK,
-      list,
+      user.article || []
     );
   }
 
   async getAllPublishArticle(data: any) {
-
     const { pageSize = 5, current = 1, uid } = data;
+
     const result = await getRepository(Article)
-      .createQueryBuilder("result")
-      .orderBy("result.createTime", "DESC")
-      .where("result.status = :status", { status: postStatus.publish })
-      .andWhere("result.uid = :uid", { uid })
+      .createQueryBuilder("article")
+      .leftJoinAndSelect("article.user", "user")
+      .where("user.userId = :userId", { userId: uid })
+      .andWhere("article.status = :status", { status: postStatus.publish })
+      .orderBy("article.createTime", "DESC")
       .skip(pageSize * (current - 1))
       .take(pageSize)
       .getManyAndCount();
@@ -254,16 +285,15 @@ export class ArticleService {
     );
   }
 
-  async queryAll(data: any, uid: string) {
-    const { current, pageSize, status, tid } = data;
+  async queryAll(data: any, userId: string) {
     // status 0全部  1:草稿  2:待审核  3:已发布  4:驳回
-
+    const { current, pageSize, status, tid } = data;
     const result = await getRepository(Article)
       .createQueryBuilder("result")
-      .orderBy("result.createTime", "DESC")
-      .where("result.uid = :uid", { uid })
+      .innerJoinAndSelect('result.user', 'user', 'user.userId = :userId', { userId })
       .andWhere(status ? "result.status = :status" : "result.status != :status", { status })
       .andWhere(tid ? "result.tid = :tid" : "result.tid != :tid", { tid: tid + '' })
+      .orderBy("result.createTime", "DESC")
       .skip(pageSize * (current - 1))
       .take(pageSize)
       .getManyAndCount();
@@ -285,6 +315,7 @@ export class ArticleService {
 
     const result = await getRepository(Article)
       .createQueryBuilder("result")
+      .leftJoinAndSelect('result.user','user')
       .orderBy("result.createTime", "DESC")
       .andWhere(status ? "result.status = :status" : "result.status != :status", { status })
       .andWhere(tid ? "result.tid = :tid" : "result.tid != :tid", { tid: tid + '' })

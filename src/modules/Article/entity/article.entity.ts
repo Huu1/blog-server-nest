@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/modules/user/entity/user.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, RelationId } from 'typeorm';
 
 @Entity()
 export class Article {
@@ -14,7 +15,7 @@ export class Article {
   @Column({ default: '' })
   title: string;
 
-  @Column({ default: '' })
+  @Column('text')
   content: string;
 
   @Column({ default: '作者很懒，没有留下什么' })
@@ -45,4 +46,7 @@ export class Article {
   // 访问次数
   @Column({ default: '' })
   rejectInfo: string;
+
+  @ManyToOne(() => User, user => user.article)
+  user: User;
 }

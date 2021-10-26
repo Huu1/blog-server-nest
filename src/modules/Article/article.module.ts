@@ -3,13 +3,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Label } from '../Classic/entity/label.entity';
 import { LabelMap } from '../Classic/entity/labelMap.entity';
 import { Tag } from '../Classic/entity/tag.entity';
+import { User } from '../user/entity/user.entity';
 import { ArticleController } from './article.controller';
 import { ArticleService } from './article.service';
 import { Article } from './entity/article.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Article, Tag, Label, LabelMap])
+    TypeOrmModule.forFeature([Article, Tag, Label, LabelMap,User])
   ],
 
   providers: [ArticleService],

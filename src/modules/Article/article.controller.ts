@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ArticleService } from './article.service';
-import { ArticleDto } from './article.dto';
+import { addArticleDto, ArticleDto } from './article.dto';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -15,12 +15,12 @@ export class ArticleController {
   constructor(private readonly articleService: ArticleService) { }
 
 
-  // 新建一个草稿文章
+  // 新建一个文章草稿
   @Post('new')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
-  addArticle(@Body() article: ArticleDto, @Req() req) {
-    return this.articleService.addArticle({ ...article, uid: req.uid });
+  addArticle(@Body() article: addArticleDto, @Req() req) {
+    return this.articleService.addArticle(article, req.uid);
   }
 
   // 获取所有草稿
@@ -31,9 +31,9 @@ export class ArticleController {
     return this.articleService.getAllDraft(req.uid);
   }
 
-  // 获取所有已发布文章
-  @Get('queryAllPublish/:uid')
-  getAllPublishArticle(@Param() data) {
+  // 传用户id 获取所有已发布文章
+  @Get('queryAllPublish')
+  getAllPublishArticle(@Query() data) {
     return this.articleService.getAllPublishArticle(data);
   }
 
@@ -91,5 +91,4 @@ export class ArticleController {
   queryAll(@Body() data: any, @Req() req) {
     return this.articleService.queryAll(data, req.uid);
   }
-
 }

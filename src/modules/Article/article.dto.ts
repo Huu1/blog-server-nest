@@ -1,3 +1,5 @@
+import { IsString, MaxLength } from "class-validator";
+
 export class ArticleDto {
   title: string;
   content: string;
@@ -15,4 +17,13 @@ export enum postStatus {
   pendingCheck,
   publish,
   reject,
+}
+
+export class addArticleDto {
+  // @IsString()
+  // @MaxLength(30)
+  title: string;
+
+  // @IsString()
+  content: string;
 }

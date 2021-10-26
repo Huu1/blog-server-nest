@@ -7,6 +7,7 @@ import { nameVerify, passwordVerify } from 'src/common/tool/utils';
 import { RCode } from 'src/common/constant/rcode';
 import { Response } from 'express';
 import { Tag } from '../Classic/entity/tag.entity';
+import { Label } from '../Classic/entity/label.entity';
 
 @Injectable()
 export class AuthService {
@@ -15,8 +16,8 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Tag)
     private readonly tagRepository: Repository<Tag>,
-    // @InjectRepository(GroupMap)
-    // private readonly groupUserRepository: Repository<GroupMap>,
+    @InjectRepository(Label)
+    private readonly labelRepository: Repository<Label>,
     private readonly jwtService: JwtService,
   ) { }
 
@@ -29,6 +30,7 @@ export class AuthService {
       return { code: RCode.FAIL, msg: '注册校验不通过！', data: '' };
     }
     const tagList = await this.tagRepository.find();
+    const labelList = await this.labelRepository.find();
 
     user.password = data.password;
     const payload = { userId: user.userId, roles: [user.role] };
@@ -37,7 +39,8 @@ export class AuthService {
       data: {
         user: user,
         appData: {
-          tagList
+          tagList,
+          labelList
         },
         token: this.jwtService.sign(payload)
       },
@@ -71,11 +74,13 @@ export class AuthService {
       if (exp - iat > 3600) {
         const user = await this.userRepository.findOne({ userId });
         const tagList = await this.tagRepository.find();
+        const labelList = await this.labelRepository.find();
         res.status(HttpStatus.OK).send({
           data: {
             user,
             appData: {
-              tagList
+              tagList,
+              labelList
             }
           },
           msg: "",

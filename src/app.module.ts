@@ -11,8 +11,8 @@ import { ArticleModule } from './modules/Article/article.module';
       type: 'mysql',
       port: 3306,
       username: 'root',
-      password: '123456',
-      database: 'chat',
+      password: 'root',
+      database: 'blog-nest',
       charset: "utf8mb4", // 设置chatset编码为utf8mb4
       autoLoadEntities: true,
       synchronize: true
