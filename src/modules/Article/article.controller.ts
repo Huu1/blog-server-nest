@@ -84,14 +84,6 @@ export class ArticleController {
     return this.articleService.setAudit(param);
   }
 
-  // 管理员下架一篇文章
-  @Post('back')
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.Admin)
-  backArticle(@Body() article: ArticleDto) {
-    return this.articleService.backArticle({ ...article });
-  }
-
   // 获取当前用户的所有文章 
   @Post('queryAll')
   @UseGuards(AuthGuard('jwt'))

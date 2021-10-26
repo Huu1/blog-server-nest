@@ -9,14 +9,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../user/entity/user.entity';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './roles.guard';
-import { TagModule } from '../Tag/tag.module';
-import { Tag } from '../Tag/entity/tag.entity';
-// import { GroupMap } from '../group/entity/group.entity'; 
+import { Tag } from '../Classic/entity/tag.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
-    TypeOrmModule.forFeature([Tag]),
+    TypeOrmModule.forFeature([User,Tag]),
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '7d' },

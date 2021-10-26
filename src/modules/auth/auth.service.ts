@@ -6,7 +6,7 @@ import { User } from '../user/entity/user.entity';
 import { nameVerify, passwordVerify } from 'src/common/tool/utils';
 import { RCode } from 'src/common/constant/rcode';
 import { Response } from 'express';
-import { Tag } from '../Tag/entity/tag.entity';
+import { Tag } from '../Classic/entity/tag.entity';
 
 @Injectable()
 export class AuthService {
@@ -29,14 +29,14 @@ export class AuthService {
       return { code: RCode.FAIL, msg: '注册校验不通过！', data: '' };
     }
     const tagList = await this.tagRepository.find();
-    
+
     user.password = data.password;
     const payload = { userId: user.userId, roles: [user.role] };
     return {
       msg: '登录成功',
       data: {
         user: user,
-        appData:{
+        appData: {
           tagList
         },
         token: this.jwtService.sign(payload)
@@ -46,7 +46,7 @@ export class AuthService {
 
   async register(user: User): Promise<any> {
     const isHave = await this.userRepository.find({ username: user.username });
-    if (isHave.length) {
+    if (isHave && isHave.length) {
       return { code: RCode.FAIL, msg: '用户名重复', data: '' };
     }
     if (!passwordVerify(user.password) || !nameVerify(user.username)) {
@@ -55,7 +55,7 @@ export class AuthService {
     user.avatar = `api/avatar/avatar(${Math.round(Math.random() * 19 + 1)}).png`;
     user.role = 'user';
     const newUser = await this.userRepository.save(user);
-    const payload = { userId: newUser.userId,  roles: ['user'] };
+    const payload = { userId: newUser.userId, roles: ['user'] };
     return {
       msg: '注册成功',
       data: {
@@ -72,9 +72,9 @@ export class AuthService {
         const user = await this.userRepository.findOne({ userId });
         const tagList = await this.tagRepository.find();
         res.status(HttpStatus.OK).send({
-          data: { 
-            user ,
-            appData:{
+          data: {
+            user,
+            appData: {
               tagList
             }
           },

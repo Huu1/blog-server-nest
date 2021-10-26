@@ -20,7 +20,7 @@ export class Article {
   @Column({ default: '作者很懒，没有留下什么' })
   brief: string;
 
-  @Column({  })
+  @Column({default:''})
   background: string;
 
   // 1:草稿  2:待审核  3:已发布  4:驳回
