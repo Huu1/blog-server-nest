@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Article } from 'src/modules/Article/entity/article.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable } from 'typeorm';
 
 @Entity()
 export class Label {
@@ -19,4 +20,8 @@ export class Label {
 
   @Column({ type: 'double', default: new Date().valueOf() })
   createTime: number;
+
+  @ManyToMany(() => Article, (article) => article.label)
+  @JoinTable()
+  article: Article[];
 }

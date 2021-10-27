@@ -1,4 +1,4 @@
-import { IsString, MaxLength } from "class-validator";
+import { IsNotEmpty, IsString, MaxLength } from "class-validator";
 
 export class ArticleDto {
   title: string;
@@ -26,4 +26,23 @@ export class addArticleDto {
 
   // @IsString()
   content: string;
+}
+
+export class publishDto {
+  @IsString()
+  @IsNotEmpty()
+  articleId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  tid;
+
+  @IsString()
+  @MaxLength(50)
+  @IsNotEmpty()
+  brief;
+
+  @IsString()
+  @IsNotEmpty()
+  labelId;
 }

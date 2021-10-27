@@ -1,5 +1,7 @@
+import { Label } from 'src/modules/Classic/entity/label.entity';
+import { Tag } from 'src/modules/Classic/entity/tag.entity';
 import { User } from 'src/modules/user/entity/user.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, RelationId } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, RelationId, ManyToMany } from 'typeorm';
 
 @Entity()
 export class Article {
@@ -49,4 +51,10 @@ export class Article {
 
   @ManyToOne(() => User, user => user.article)
   user: User;
+
+  @ManyToOne(() => Tag, tag => tag.article)
+  tag: Tag;
+
+  @ManyToMany(() => Label, (Label) => Label.article)
+    label: Label[];
 }

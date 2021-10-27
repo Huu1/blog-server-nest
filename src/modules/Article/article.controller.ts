@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ArticleService } from './article.service';
-import { addArticleDto, ArticleDto } from './article.dto';
+import { addArticleDto, ArticleDto, publishDto } from './article.dto';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -64,7 +64,7 @@ export class ArticleController {
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
   @UseInterceptors(FileInterceptor('file'))
-  userPublishArticle(@Body() article: ArticleDto, @UploadedFile() file, @Req() req) {
+  userPublishArticle(@Body() article: publishDto, @UploadedFile() file, @Req() req) {
     return this.articleService.userPublishArticle({ ...article, uid: req.uid }, file);
   }
 
