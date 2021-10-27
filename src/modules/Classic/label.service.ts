@@ -4,9 +4,12 @@ https://docs.nestjs.com/providers#services
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Echo, RCode } from 'src/common/constant/rcode';
+import { getRepository, Repository } from 'typeorm';
+import { postStatus } from '../Article/article.dto';
+import { Article } from '../Article/entity/article.entity';
 import { Label } from './entity/label.entity';
-import { LabelDto} from './tag.dto';
+import { LabelDto } from './tag.dto';
 
 @Injectable()
 export class LabelService {
@@ -30,5 +33,20 @@ export class LabelService {
         msg: "操作成功"
       };
     }
+  }
+
+  async getArticleBylabelId(labelId: string) {
+    const res = await getRepository(Label)
+      .createQueryBuilder('label')
+      .leftJoinAndSelect('label.article', 'article', 'article.status =:status', { status: postStatus.publish })
+      .innerJoinAndSelect('article.user', 'user')
+      .leftJoinAndSelect('article.tag', 'tag')
+      .where('label.labelId = :labelId', { labelId })
+      .getOne();
+
+    return new Echo(
+      RCode.OK,
+      res
+    );
   }
 }
