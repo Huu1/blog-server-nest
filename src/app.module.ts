@@ -15,7 +15,8 @@ import { ArticleModule } from './modules/Article/article.module';
       database: 'blog-nest',
       charset: "utf8mb4", // 设置chatset编码为utf8mb4
       autoLoadEntities: true,
-      synchronize: true
+      synchronize: true,
+      logging: true,
     }),
     AuthModule,
     UserModule,

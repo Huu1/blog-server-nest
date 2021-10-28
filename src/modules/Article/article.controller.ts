@@ -15,7 +15,7 @@ export class ArticleController {
   constructor(private readonly articleService: ArticleService) { }
 
 
-  // 新建一个文章草稿
+  // 新建一个草稿
   @Post('new')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
@@ -23,27 +23,8 @@ export class ArticleController {
     return this.articleService.addArticle(article, req.uid);
   }
 
-  // 获取所有草稿
-  @Get('allDraft')
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.User)
-  getAllDraft(@Req() req) {
-    return this.articleService.getAllDraft(req.uid);
-  }
-
-  // 传用户id 获取所有已发布文章
-  @Get('queryAllPublish')
-  getAllPublishArticle(@Query() data) {
-    return this.articleService.getAllPublishArticle(data);
-  }
-
-  //查询一篇文章
-  @Get(':id')
-  findOneArticle(@Param() { id }) {
-    return this.articleService.findOneArticle(id);
-  }
-
-  // 编辑一个文章
+  
+  // 编辑草稿
   @Post('edit')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
@@ -58,6 +39,28 @@ export class ArticleController {
   deleteArticle(@Body() article: ArticleDto, @Req() req) {
     return this.articleService.deleteArticle({ ...article, uid: req.uid });
   }
+
+  // 获取所有草稿
+  @Get('allDraft')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  getAllDraft(@Req() req) {
+    return this.articleService.getAllDraft(req.uid);
+  }
+
+  // 传用户id 获取所有已发布的文章
+  @Get('queryAllPublish')
+  getAllPublishArticle(@Query() data) {
+    return this.articleService.getAllPublishArticle(data);
+  }
+
+  //查询一篇文章
+  @Get(':id')
+  findOneArticle(@Param() { id }) {
+    return this.articleService.findOneArticle(id);
+  }
+
+
 
   //  用户发布文章
   @Post('pushlish')
@@ -76,14 +79,6 @@ export class ArticleController {
     return this.articleService.getAllArticle(data);
   }
 
-  // 管理员审核文章
-  @Post('setAudit')
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.Admin)
-  setAudit(@Body() param,) {
-    return this.articleService.setAudit(param);
-  }
-
   // 获取当前用户的所有文章 
   @Post('queryAll')
   @UseGuards(AuthGuard('jwt'))
@@ -91,4 +86,12 @@ export class ArticleController {
   queryAll(@Body() data: any, @Req() req) {
     return this.articleService.queryAll(data, req.uid);
   }
+
+  // // 管理员审核文章
+  // @Post('setAudit')
+  // @UseGuards(AuthGuard('jwt'))
+  // @Roles(Role.Admin)
+  // setAudit(@Body() param,) {
+  //   return this.articleService.setAudit(param);
+  // }
 }
