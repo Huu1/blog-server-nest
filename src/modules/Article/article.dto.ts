@@ -38,7 +38,7 @@ export class publishDto {
   tid;
 
   @IsString()
-  @MaxLength(50)
+  @MaxLength(100)
   @IsNotEmpty()
   brief;
 

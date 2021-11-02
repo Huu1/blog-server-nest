@@ -43,6 +43,9 @@ export class Article {
   @Column({ default: '' })
   rejectInfo: string;
 
+  @Column({ default: 1 })
+  readTime: number;
+
   @OneToOne(() => ArticleContent, content => content.article, {
     cascade: true,
   })

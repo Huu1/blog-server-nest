@@ -40,13 +40,13 @@ export class ArticleController {
     return this.articleService.deleteArticle({ ...article, uid: req.uid });
   }
 
-  // 获取所有草稿
-  @Get('allDraft')
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.User)
-  getAllDraft(@Req() req) {
-    return this.articleService.getAllDraft(req.uid);
-  }
+  // // 获取所有草稿
+  // @Get('allDraft')
+  // @UseGuards(AuthGuard('jwt'))
+  // @Roles(Role.User)
+  // getAllDraft(@Req() req) {
+  //   return this.articleService.getAllDraft(req.uid);
+  // }
 
   // 传用户id 获取所有已发布的文章
   @Get('queryAllPublish')
@@ -59,8 +59,6 @@ export class ArticleController {
   findOneArticle(@Param() { id }) {
     return this.articleService.findOneArticle(id);
   }
-
-
 
   //  用户发布文章
   @Post('pushlish')

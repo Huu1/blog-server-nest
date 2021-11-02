@@ -27,10 +27,13 @@ export class ArticleService {
   ) { }
 
   async findOneArticle(id: string) {
-    const article = await this.articleRepository.findOne({ articleId: id }, { relations: ['user'] });
+    const article = await this.articleRepository.findOne({ relations: ["content",'user','label'], where: { articleId: id } });
+
+
     if (article) {
       if (article.status === postStatus.publish) {
-        await this.articleRepository.update(article, { ...article, viewNum: article.viewNum + 1 });
+        article.viewNum = article.viewNum + 1;
+        await this.articleRepository.save(article);
       }
       return new Echo(
         RCode.OK,
@@ -65,7 +68,6 @@ export class ArticleService {
       article.content = articleContent;
       article.status = postStatus.draft;
       const res = await this.articleRepository.save(article);
-      console.log(res);
 
       return new Echo(
         RCode.OK,
@@ -87,58 +89,26 @@ export class ArticleService {
   async editArticle(articleDto: ArticleDto) {
     const { uid, title, content, articleId } = articleDto;
     try {
-      // const articleContent = await getRepository(ArticleContent)
-      //   .createQueryBuilder('content')
-
-      //   //id匹配
-      //   .leftJoinAndSelect('content.article', 'article', 'article.articleId=:articleId', { articleId })
-
-      //   //用户匹配
-      //   .innerJoin('article.user', 'user', 'user.userId = :userId', { userId: uid })
-
-      //   //是草稿
-      //   .where('article.status =:status', { status: postStatus.draft })
-      //   .getOne();
-
-      // const result = await getConnection().transaction(async transactionalEntityManager => {
-      // await transactionalEntityManager.
       await getRepository(Article)
         .createQueryBuilder('article')
-        .leftJoinAndSelect('article.user', 'user', 'user.userId=:userId', { userId:uid })
+        .leftJoinAndSelect('article.user', 'user', 'user.userId=:userId', { userId: uid })
         .update()
         .set({ title })
         .where('article.articleId=:articleId', { articleId })
         .execute();
-      // await transactionalEntityManager.
+
       await getRepository(ArticleContent)
         .createQueryBuilder('content')
         .innerJoinAndSelect('content.article', 'article')
-        .innerJoinAndSelect('article.user', 'user','user.userId=:userId', { userId: uid })
+        .innerJoinAndSelect('article.user', 'user', 'user.userId=:userId', { userId: uid })
         .update()
         .set({ content })
         .where('article.articleId=:articleId', { articleId })
-        // .andWhere()
         .execute();
-
-      // if (articleContent) {
-      //   articleContent.content = content;
-      //   articleContent.article.title = title;
-      //   await this.articleRepository.save(articleContent.article);
-      //   await this.articleContentRepository.save(articleContent);
-      //   return new Echo(
-      //     RCode.OK,
-      //     null,
-      //   );
-      // }
-      // console.log(result);
-
-      // else {
       return new Echo(
-        RCode.FAIL,
+        RCode.OK,
         null,
-        '23'
       );
-      // }
     } catch (error) {
       console.log(error);
       return new Echo(
@@ -165,9 +135,9 @@ export class ArticleService {
         .andWhere('article.status=:status', { status: postStatus.draft })
         .getOne();
 
-      console.log(article);
 
       if (article) {
+        await this.articleContentRepository.remove(article.content);
         await this.articleRepository.remove(article);
         return new Echo(
           RCode.OK,
@@ -241,6 +211,7 @@ export class ArticleService {
     const oldArticle = await getRepository(Article)
       .createQueryBuilder("article")
       .leftJoinAndSelect("article.user", "user")
+      .leftJoinAndSelect("article.content", "content")
       .where("user.userId = :userId", { userId: uid })
       .andWhere("article.articleId = :articleId", { articleId })
       .andWhere("article.status = :status", { status: postStatus.draft })
@@ -305,6 +276,7 @@ export class ArticleService {
         await getConnection().transaction(async transactionalEntityManager => {
           oldArticle.label = labelList;
           oldArticle.tag = hasTag;
+          oldArticle.readTime=oldArticle.content.content.length / 500;
           await transactionalEntityManager.save(Article, { ...oldArticle, brief, background, status: postStatus.pendingCheck });
         });
       } catch (error) {
@@ -407,15 +379,28 @@ export class ArticleService {
     const { current, pageSize, status, tid } = data;
     // status 0全部  1:草稿  2:待审核  3:已发布  4:驳回
 
-    const result = await getRepository(Article)
-      .createQueryBuilder("result")
-      .leftJoinAndSelect('result.user', 'user')
-      .orderBy("result.createTime", "DESC")
-      .andWhere(status ? "result.status = :status" : "result.status != :status", { status })
-      .andWhere(tid ? "result.tid = :tid" : "result.tid != :tid", { tid: tid + '' })
-      .skip(pageSize * (current - 1))
-      .take(pageSize)
-      .getManyAndCount();
+    let result;
+    if (tid) {
+      result = await getRepository(Article)
+        .createQueryBuilder("result")
+        .innerJoinAndSelect('result.user', 'user')
+        .innerJoinAndSelect('result.tag', 'tag', 'tag.tagId = :tagId', { tagId: tid })
+        .where(status ? "result.status = :status" : "result.status != :status", { status })
+        .orderBy("result.createTime", "DESC")
+        .skip(pageSize * (current - 1))
+        .take(pageSize)
+        .getManyAndCount();
+    } else {
+      result = await getRepository(Article)
+        .createQueryBuilder("result")
+        .innerJoinAndSelect('result.user', 'user')
+        .leftJoinAndSelect('result.tag', 'tag')
+        .where(status ? "result.status = :status" : "result.status != :status", { status })
+        .orderBy("result.createTime", "DESC")
+        .skip(pageSize * (current - 1))
+        .take(pageSize)
+        .getManyAndCount();
+    }
 
     return new Echo(
       RCode.OK,
