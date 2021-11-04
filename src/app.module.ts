@@ -16,7 +16,7 @@ import { ArticleModule } from './modules/Article/article.module';
       charset: "utf8mb4", // 设置chatset编码为utf8mb4
       autoLoadEntities: true,
       synchronize: true,
-      logging: true,
+      logging: false,
     }),
     AuthModule,
     UserModule,
