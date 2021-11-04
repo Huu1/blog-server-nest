@@ -1,8 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Label } from 'src/modules/Classic/entity/label.entity';
 import { Tag } from 'src/modules/Classic/entity/tag.entity';
 import { User } from 'src/modules/user/entity/user.entity';
 import { ArticleContent } from './articleContent.entity';
+import { Comment } from 'src/modules/Comment/entity/comment.entity';
 
 @Entity()
 export class Article {
@@ -62,4 +63,7 @@ export class Article {
   // 标签
   @ManyToMany(() => Label, (Label) => Label.article)
   label: Label[];
+
+  @OneToMany(() => Comment, comment => comment.article)
+  comment: Comment[];
 }

@@ -1,4 +1,5 @@
 import { Article } from 'src/modules/Article/entity/article.entity';
+import { Comment } from 'src/modules/Comment/entity/comment.entity';
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
 @Entity()
@@ -29,4 +30,7 @@ export class User {
 
   @OneToMany(() => Article, article => article.user)
   article: Article[];
+
+  @OneToMany(() => Comment, comment => comment.user)
+  comment: Comment[];
 }
