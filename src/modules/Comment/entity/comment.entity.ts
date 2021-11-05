@@ -14,11 +14,12 @@ export class Comment {
   @Column({ default: 'on' })
   status: string;
 
-
   @Column({ type: 'double', default: new Date().valueOf() })
   createTime: number;
 
-  @ManyToOne(() => Article, article => article.comment)
+  @ManyToOne(() => Article, article => article.comment, {
+    cascade: true,
+  })
   article: Article;
 
   @ManyToOne(() => User, user => user.comment)
@@ -26,5 +27,4 @@ export class Comment {
 
   @OneToMany(() => Replay, replay => replay.comment)
   replay: Replay[];
-
 }

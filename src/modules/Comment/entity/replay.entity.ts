@@ -23,4 +23,7 @@ export class Replay {
 
   @ManyToOne(() => User, user => user.comment)
   user: User;
+
+  @ManyToOne(() => User)
+  toUser: User;
 }
