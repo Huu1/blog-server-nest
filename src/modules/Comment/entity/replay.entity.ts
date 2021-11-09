@@ -1,6 +1,6 @@
 import { Article } from 'src/modules/Article/entity/article.entity';
 import { User } from 'src/modules/user/entity/user.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
 import { Comment } from './comment.entity';
 
 @Entity()
@@ -26,4 +26,7 @@ export class Replay {
 
   @ManyToOne(() => User)
   toUser: User;
+
+  @ManyToOne(() => Replay)
+  toReplay: Replay;
 }

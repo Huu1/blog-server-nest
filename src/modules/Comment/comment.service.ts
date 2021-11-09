@@ -59,6 +59,7 @@ export class CommentService {
       .leftJoinAndSelect("comment.user", "user")
       .leftJoinAndSelect("replay.user", "ruser")
       .leftJoinAndSelect("replay.toUser", "toUser")
+      .leftJoinAndSelect("replay.toReplay", "toReplay")
       .where('article.articleId=:articleId', { articleId })
       .getOne();
 
@@ -68,8 +69,8 @@ export class CommentService {
   }
 
   async replayComment(reply: ReplayDto, userId: string) {
-    const { content, commentId, toUid } = reply;
-
+    const { content, commentId, toUid, toReplayId } = reply;
+    
     const comment = await getRepository(Comment)
       .createQueryBuilder("comment")
       .where('comment.id=:id', { id: commentId })
@@ -85,11 +86,17 @@ export class CommentService {
       .where('user.userId=:userId', { userId: toUid })
       .getOne();
 
+    const toReplay = await this.replayRepository.findOne({ where: { id: toReplayId }});
+
     const replay = new Replay();
     replay.content = content;
     replay.user = user;
-    if (toUser) replay.toUser = toUser;
     replay.comment = comment;
+    if (toUser) {
+      replay.toUser = toUser;
+      replay.toReplay = toReplay;
+    }
+
     await this.replayRepository.save(replay);
 
     return {};

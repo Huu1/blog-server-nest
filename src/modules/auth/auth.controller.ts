@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, Req, Request, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req, Request, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
@@ -20,6 +20,11 @@ export class AuthController {
   @Post('/refresh')
   async refresh(@Body() { token }, @Res() res: Response) {
     return this.authService.refresh(token, res);
+  }
+
+  @Get('/getConfig')
+  async getAppData() {
+    return this.authService.getAppData();
   }
 
 }

@@ -11,6 +11,9 @@ export class User {
   @Column({ default: '' })
   username: string;
 
+  @Column({ default: '' })
+  name: string;
+
   @Column({ default: '', select: false })
   password: string;
 
@@ -26,7 +29,7 @@ export class User {
   @Column({ default: '' })
   tag: string;
 
-  @Column({type: 'double',default: new Date().valueOf()})
+  @Column({ type: 'double', default: new Date().valueOf() })
   createTime: number;
 
   @OneToMany(() => Article, article => article.user)
@@ -37,7 +40,4 @@ export class User {
 
   @OneToMany(() => Replay, replay => replay.user)
   replay: Replay[];
-
-  // @OneToMany(() => Replay, replay => replay.user)
-  // replay: Replay[];
 }

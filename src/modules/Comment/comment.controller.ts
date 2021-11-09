@@ -33,8 +33,8 @@ export class CommentController {
 
   // 获取一篇文章的评论
   @Get('/:id')
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.User)
+  // @UseGuards(AuthGuard('jwt'))
+  // @Roles(Role.User)
   findArticleComment(@Param() {id}, @Req() req) {
     return this.commentService.findArticleComment(id);
   }

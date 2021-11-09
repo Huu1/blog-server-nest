@@ -8,6 +8,7 @@ import { RCode } from 'src/common/constant/rcode';
 import { Response } from 'express';
 import { Tag } from '../Classic/entity/tag.entity';
 import { Label } from '../Classic/entity/label.entity';
+import { loginDto } from './user.dto';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +22,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) { }
 
-  async login(data: User): Promise<any> {
+  async login(data: loginDto): Promise<any> {
     const user = await this.userRepository.findOne({ username: data.username, password: data.password });
     if (!user) {
       return { code: 1, msg: '密码错误', data: '' };
@@ -81,7 +82,8 @@ export class AuthService {
             appData: {
               tagList,
               labelList
-            }
+            },
+            version: 'v1.0'
           },
           msg: "",
           code: 0
@@ -91,5 +93,19 @@ export class AuthService {
     } catch (error) {
       res.status(HttpStatus.UNAUTHORIZED).send();
     }
+  }
+
+  async getAppData(): Promise<any> {
+    const tagList = await this.tagRepository.find();
+    const labelList = await this.labelRepository.find();
+    return {
+      data: {
+        appData: {
+          tagList,
+          labelList
+        },
+        version: 'v1.0'
+      },
+    };
   }
 }

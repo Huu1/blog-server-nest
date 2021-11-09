@@ -1,3 +1,4 @@
+import { LikeModule } from './modules/Like/like.module';
 import { ClassicModule } from './modules/Classic/classic.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -24,6 +25,7 @@ import { CommentModule } from './modules/Comment/comment.module';
     ArticleModule,
     ClassicModule,
     CommentModule,
+    LikeModule,
   ],
 })
 export class AppModule { }

@@ -24,4 +24,6 @@ export class ReplayDto {
   content: string;
 
   toUid: string;
+
+  toReplayId:string;
 }
