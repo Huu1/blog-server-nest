@@ -1,6 +1,7 @@
 import { Article } from 'src/modules/Article/entity/article.entity';
 import { Comment } from 'src/modules/Comment/entity/comment.entity';
 import { Replay } from 'src/modules/Comment/entity/replay.entity';
+import { Like } from 'src/modules/Like/entity/like.entity';
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
 @Entity()
@@ -40,4 +41,7 @@ export class User {
 
   @OneToMany(() => Replay, replay => replay.user)
   replay: Replay[];
+
+  @OneToMany(() => Like, like => like.user)
+  like: Like[];
 }

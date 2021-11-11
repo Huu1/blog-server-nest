@@ -1,4 +1,5 @@
 import { Article } from 'src/modules/Article/entity/article.entity';
+import { Like } from 'src/modules/Like/entity/like.entity';
 import { User } from 'src/modules/user/entity/user.entity';
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, ManyToOne } from 'typeorm';
 import { Replay } from './replay.entity';
@@ -27,4 +28,7 @@ export class Comment {
 
   @OneToMany(() => Replay, replay => replay.comment)
   replay: Replay[];
+
+  @OneToMany(() => Like, like => like.comment)
+  like: Like[];
 }

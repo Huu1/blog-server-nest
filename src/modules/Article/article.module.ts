@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthService } from '../auth/auth.service';
 import { Label } from '../Classic/entity/label.entity';
 import { Tag } from '../Classic/entity/tag.entity';
 import { User } from '../user/entity/user.entity';
@@ -10,7 +12,8 @@ import { ArticleContent } from './entity/articleContent.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Article, Tag, Label, User, ArticleContent])
+    TypeOrmModule.forFeature([Article, Tag, Label, User, ArticleContent]),
+    
   ],
 
   providers: [ArticleService],

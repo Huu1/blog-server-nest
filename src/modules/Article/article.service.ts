@@ -10,6 +10,7 @@ import { Tag } from '../Classic/entity/tag.entity';
 import { Label } from '../Classic/entity/label.entity';
 import { User } from '../user/entity/user.entity';
 import { ArticleContent } from './entity/articleContent.entity';
+import { Like } from '../Like/entity/like.entity';
 
 @Injectable()
 export class ArticleService {
@@ -27,7 +28,7 @@ export class ArticleService {
   ) { }
 
   async findOneArticle(id: string) {
-    const article = await this.articleRepository.findOne({ relations: ["content",'user','label'], where: { articleId: id } });
+    const article = await this.articleRepository.findOne({ relations: ["content", 'user', 'label'], where: { articleId: id } });
 
 
     if (article) {
@@ -276,7 +277,7 @@ export class ArticleService {
         await getConnection().transaction(async transactionalEntityManager => {
           oldArticle.label = labelList;
           oldArticle.tag = hasTag;
-          oldArticle.readTime=oldArticle.content.content.length / 500;
+          oldArticle.readTime = oldArticle.content.content.length / 500;
           await transactionalEntityManager.save(Article, { ...oldArticle, brief, background, status: postStatus.pendingCheck });
         });
       } catch (error) {
@@ -314,17 +315,25 @@ export class ArticleService {
   async getAllPublishArticle(data: any) {
     const { pageSize = 5, current = 1, uid } = data;
 
+    const user = {};
+
+    const userQb = await getRepository(Like)
+      .createQueryBuilder("like")
+      .where("like.id = :id", { id: 22 });
+
     const result = await getRepository(Article)
       .createQueryBuilder("article")
       .leftJoinAndSelect("article.user", "user")
       .leftJoinAndSelect("article.label", "label")
       .leftJoinAndSelect("article.tag", "tag")
+      .leftJoin("article.like", "like")
       .where("user.userId = :userId", { userId: uid })
       .andWhere("article.status = :status", { status: postStatus.publish })
       .orderBy("article.createTime", "DESC")
       .skip(pageSize * (current - 1))
       .take(pageSize)
       .getManyAndCount();
+
 
     return new Echo(
       RCode.OK,

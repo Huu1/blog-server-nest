@@ -9,10 +9,13 @@ import { addArticleDto, ArticleDto, publishDto } from './article.dto';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Request } from 'express';
 
 @Controller('article')
 export class ArticleController {
-  constructor(private readonly articleService: ArticleService) { }
+  constructor(
+    private readonly articleService: ArticleService
+  ) { }
 
 
   // 新建一个草稿
@@ -23,7 +26,7 @@ export class ArticleController {
     return this.articleService.addArticle(article, req.uid);
   }
 
-  
+
   // 编辑草稿
   @Post('edit')
   @UseGuards(AuthGuard('jwt'))
@@ -50,7 +53,13 @@ export class ArticleController {
 
   // 传用户id 获取所有已发布的文章
   @Get('queryAllPublish')
-  getAllPublishArticle(@Query() data) {
+  getAllPublishArticle(@Query() data, @Req() request: Request) {
+    const token = request.headers.token as string;
+    if (token) {
+      // const user = this.authService.verifyToken(token);
+      // console.log(user);
+    }
+
     return this.articleService.getAllPublishArticle(data);
   }
 
