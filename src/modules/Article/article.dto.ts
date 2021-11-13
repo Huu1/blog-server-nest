@@ -11,12 +11,9 @@ export class ArticleDto {
 }
 
 export enum postStatus {
-  // 1:草稿  2:待审核  3:已发布  4:驳回
-  idle,
+  // 1:草稿  2:已发布  
   draft,
-  pendingCheck,
   publish,
-  reject,
 }
 
 export class addArticleDto {

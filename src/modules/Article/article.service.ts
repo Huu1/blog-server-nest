@@ -10,7 +10,7 @@ import { Tag } from '../Classic/entity/tag.entity';
 import { Label } from '../Classic/entity/label.entity';
 import { User } from '../user/entity/user.entity';
 import { ArticleContent } from './entity/articleContent.entity';
-import { Like } from '../Like/entity/like.entity';
+// import { Like } from '../Like/entity/like.entity';
 
 @Injectable()
 export class ArticleService {
@@ -30,7 +30,6 @@ export class ArticleService {
   async findOneArticle(id: string) {
     const article = await this.articleRepository.findOne({ relations: ["content", 'user', 'label'], where: { articleId: id } });
 
-
     if (article) {
       if (article.status === postStatus.publish) {
         article.viewNum = article.viewNum + 1;
@@ -49,16 +48,11 @@ export class ArticleService {
     }
   }
 
+  // 新建草稿
   async addArticle(articleDto: addArticleDto, uid: string) {
     try {
       const user = await this.userRepository.findOne({ userId: uid });
-      if (!user) {
-        return new Echo(
-          RCode.FAIL,
-          null,
-          '用户不存在'
-        );
-      }
+
       const { title, content: contentData } = articleDto;
       const articleContent = new ArticleContent();
       articleContent.content = contentData;
@@ -69,7 +63,6 @@ export class ArticleService {
       article.content = articleContent;
       article.status = postStatus.draft;
       const res = await this.articleRepository.save(article);
-
       return new Echo(
         RCode.OK,
         {
@@ -79,8 +72,6 @@ export class ArticleService {
         },
       );
     } catch (error) {
-      console.log(error);
-
       return new Echo(
         RCode.FAIL,
       );
@@ -162,31 +153,10 @@ export class ArticleService {
     }
   }
 
-  // async backArticle(article: ArticleDto) {
-  //   const { articleId } = article;
-
-  //   const oldArticle = await this.articleRepository.findOne({ articleId, status: 3 });
-
-  //   if (oldArticle) {
-  //     await this.articleRepository.update(oldArticle, { ...oldArticle, status: 2 });
-  //     return new Echo(
-  //       RCode.OK,
-  //       null,
-  //       '下架成功'
-  //     );
-  //   } else {
-  //     return new Echo(
-  //       RCode.FAIL,
-  //       null,
-  //       '文章不存在'
-  //     );
-  //   }
-  // }
-
   async publishArticle(article: ArticleDto) {
     const { articleId } = article;
 
-    const oldArticle = await this.articleRepository.findOne({ articleId, status: postStatus.pendingCheck });
+    const oldArticle = await this.articleRepository.findOne({ articleId, status: postStatus.draft });
 
     if (oldArticle) {
       await this.articleRepository.update(oldArticle, { ...oldArticle, status: postStatus.publish });
@@ -277,12 +247,10 @@ export class ArticleService {
         await getConnection().transaction(async transactionalEntityManager => {
           oldArticle.label = labelList;
           oldArticle.tag = hasTag;
-          oldArticle.readTime = oldArticle.content.content.length / 500;
-          await transactionalEntityManager.save(Article, { ...oldArticle, brief, background, status: postStatus.pendingCheck });
+          // oldArticle.readTime = oldArticle.content.content.length / 500;
+          await transactionalEntityManager.save(Article, { ...oldArticle, brief, background, status: postStatus.publish });
         });
       } catch (error) {
-        console.log(error);
-
         return new Echo(
           RCode.FAIL,
           null,
@@ -292,41 +260,35 @@ export class ArticleService {
       return new Echo(
         RCode.OK,
         null,
-        '发布成功,待审核中'
+        '发布成功'
       );
     }
   }
 
-  async getAllDraft(userId: string) {
-    const user = await getRepository(User)
-      .createQueryBuilder("user")
-      .leftJoinAndSelect("user.article", "article", 'article.status= :status', { status: postStatus.draft })
-      .where("user.userId = :userId", { userId })
-      // .leftJoinAndSelect("article.tag", "tag")
-      .orderBy("article.createTime", "DESC")
-      .getOne();
+  // async getAllDraft(userId: string) {
+  //   const user = await getRepository(User)
+  //     .createQueryBuilder("user")
+  //     .leftJoinAndSelect("user.article", "article", 'article.status= :status', { status: postStatus.draft })
+  //     .where("user.userId = :userId", { userId })
+  //     // .leftJoinAndSelect("article.tag", "tag")
+  //     .orderBy("article.createTime", "DESC")
+  //     .getOne();
 
-    return new Echo(
-      RCode.OK,
-      user.article || []
-    );
-  }
+  //   return new Echo(
+  //     RCode.OK,
+  //     user.article || []
+  //   );
+  // }
 
   async getAllPublishArticle(data: any) {
     const { pageSize = 5, current = 1, uid } = data;
-
-    const user = {};
-
-    const userQb = await getRepository(Like)
-      .createQueryBuilder("like")
-      .where("like.id = :id", { id: 22 });
 
     const result = await getRepository(Article)
       .createQueryBuilder("article")
       .leftJoinAndSelect("article.user", "user")
       .leftJoinAndSelect("article.label", "label")
       .leftJoinAndSelect("article.tag", "tag")
-      .leftJoin("article.like", "like")
+      // .leftJoin("article.like", "like")
       .where("user.userId = :userId", { userId: uid })
       .andWhere("article.status = :status", { status: postStatus.publish })
       .orderBy("article.createTime", "DESC")
@@ -347,7 +309,7 @@ export class ArticleService {
   }
 
   async queryAll(data: any, userId: string) {
-    // status 0全部  1:草稿  2:待审核  3:已发布  4:驳回
+    // status 0全部  1:草稿  2:已发布
     const { current, pageSize, status, tid } = data;
 
     let result;
@@ -384,62 +346,62 @@ export class ArticleService {
     );
   }
 
-  async getAllArticle(data) {
-    const { current, pageSize, status, tid } = data;
-    // status 0全部  1:草稿  2:待审核  3:已发布  4:驳回
+  // async getAllArticle(data) {
+  //   const { current, pageSize, status, tid } = data;
+  //   // status 0全部  1:草稿  2:待审核  3:已发布  4:驳回
 
-    let result;
-    if (tid) {
-      result = await getRepository(Article)
-        .createQueryBuilder("result")
-        .innerJoinAndSelect('result.user', 'user')
-        .innerJoinAndSelect('result.tag', 'tag', 'tag.tagId = :tagId', { tagId: tid })
-        .where(status ? "result.status = :status" : "result.status != :status", { status })
-        .orderBy("result.createTime", "DESC")
-        .skip(pageSize * (current - 1))
-        .take(pageSize)
-        .getManyAndCount();
-    } else {
-      result = await getRepository(Article)
-        .createQueryBuilder("result")
-        .innerJoinAndSelect('result.user', 'user')
-        .leftJoinAndSelect('result.tag', 'tag')
-        .where(status ? "result.status = :status" : "result.status != :status", { status })
-        .orderBy("result.createTime", "DESC")
-        .skip(pageSize * (current - 1))
-        .take(pageSize)
-        .getManyAndCount();
-    }
+  //   let result;
+  //   if (tid) {
+  //     result = await getRepository(Article)
+  //       .createQueryBuilder("result")
+  //       .innerJoinAndSelect('result.user', 'user')
+  //       .innerJoinAndSelect('result.tag', 'tag', 'tag.tagId = :tagId', { tagId: tid })
+  //       .where(status ? "result.status = :status" : "result.status != :status", { status })
+  //       .orderBy("result.createTime", "DESC")
+  //       .skip(pageSize * (current - 1))
+  //       .take(pageSize)
+  //       .getManyAndCount();
+  //   } else {
+  //     result = await getRepository(Article)
+  //       .createQueryBuilder("result")
+  //       .innerJoinAndSelect('result.user', 'user')
+  //       .leftJoinAndSelect('result.tag', 'tag')
+  //       .where(status ? "result.status = :status" : "result.status != :status", { status })
+  //       .orderBy("result.createTime", "DESC")
+  //       .skip(pageSize * (current - 1))
+  //       .take(pageSize)
+  //       .getManyAndCount();
+  //   }
 
-    return new Echo(
-      RCode.OK,
-      {
-        list: result[0],
-        total: result[1],
-        current,
-        pageSize
-      },
-    );
-  }
+  //   return new Echo(
+  //     RCode.OK,
+  //     {
+  //       list: result[0],
+  //       total: result[1],
+  //       current,
+  //       pageSize
+  //     },
+  //   );
+  // }
 
-  async setAudit(param) {
-    const { articleId, status: auditStatus, info } = param;
-    const target = await this.articleRepository.findOne({ status: postStatus.pendingCheck, articleId });
-    if (!target) {
-      return new Echo(
-        RCode.FAIL,
-        null,
-        '未找到此文章'
-      );
-    }
+  // async setAudit(param) {
+  //   const { articleId, status: auditStatus, info } = param;
+  //   const target = await this.articleRepository.findOne({ status: postStatus.pendingCheck, articleId });
+  //   if (!target) {
+  //     return new Echo(
+  //       RCode.FAIL,
+  //       null,
+  //       '未找到此文章'
+  //     );
+  //   }
 
-    const status = auditStatus === 1 ? postStatus.publish : postStatus.reject;
+  //   const status = auditStatus === 1 ? postStatus.publish : postStatus.reject;
 
-    await this.articleRepository.update(target, { ...target, rejectInfo: info, status });
-    return new Echo(
-      RCode.OK,
-      null,
-    );
+  //   await this.articleRepository.update(target, { ...target, rejectInfo: info, status });
+  //   return new Echo(
+  //     RCode.OK,
+  //     null,
+  //   );
 
-  }
+  // }
 }

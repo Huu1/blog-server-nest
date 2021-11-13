@@ -16,13 +16,13 @@ export class Like {
   })
   article: Article;
 
-  @ManyToOne(() => User, user => user.like, {
-    cascade: true,
-  })
-  user: User;
+  // @ManyToOne(() => User, user => user.like, {
+  //   cascade: true,
+  // })
+  // user: User;
 
-  @ManyToOne(() => Comment, comment => comment.like, {
-    cascade: true,
-  })
-  comment: Comment;
+  // @ManyToOne(() => Comment, comment => comment.like, {
+  //   cascade: true,
+  // })
+  // comment: Comment;
 }

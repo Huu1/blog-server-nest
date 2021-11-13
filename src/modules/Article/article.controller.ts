@@ -1,6 +1,6 @@
 import {
   Controller, Post, Get,
-  Body, Query, Patch, Param, Delete, UseInterceptors,
+  Body, Query, Param, UseInterceptors,
   UploadedFile, UseGuards, Req
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -17,7 +17,6 @@ export class ArticleController {
     private readonly articleService: ArticleService
   ) { }
 
-
   // 新建一个草稿
   @Post('new')
   @UseGuards(AuthGuard('jwt'))
@@ -25,7 +24,6 @@ export class ArticleController {
   addArticle(@Body() article: addArticleDto, @Req() req) {
     return this.articleService.addArticle(article, req.uid);
   }
-
 
   // 编辑草稿
   @Post('edit')
@@ -43,23 +41,9 @@ export class ArticleController {
     return this.articleService.deleteArticle({ ...article, uid: req.uid });
   }
 
-  // // 获取所有草稿
-  // @Get('allDraft')
-  // @UseGuards(AuthGuard('jwt'))
-  // @Roles(Role.User)
-  // getAllDraft(@Req() req) {
-  //   return this.articleService.getAllDraft(req.uid);
-  // }
-
   // 传用户id 获取所有已发布的文章
   @Get('queryAllPublish')
-  getAllPublishArticle(@Query() data, @Req() request: Request) {
-    const token = request.headers.token as string;
-    if (token) {
-      // const user = this.authService.verifyToken(token);
-      // console.log(user);
-    }
-
+  getAllPublishArticle(@Query() data) {
     return this.articleService.getAllPublishArticle(data);
   }
 
@@ -67,6 +51,14 @@ export class ArticleController {
   @Get(':id')
   findOneArticle(@Param() { id }) {
     return this.articleService.findOneArticle(id);
+  }
+
+  //查询一篇文章
+  @Post('queryAll')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  queryAll(@Body() data: any, @Req() req) {
+    return this.articleService.queryAll(data, req.uid);
   }
 
   //  用户发布文章
@@ -77,28 +69,4 @@ export class ArticleController {
   userPublishArticle(@Body() article: publishDto, @UploadedFile() file, @Req() req) {
     return this.articleService.userPublishArticle({ ...article, uid: req.uid }, file);
   }
-
-  // 管理员获取所有用户文章
-  @Post('allArticle')
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.Admin)
-  getAllArticle(@Body() data: any) {
-    return this.articleService.getAllArticle(data);
-  }
-
-  // 获取当前用户的所有文章 
-  @Post('queryAll')
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.User)
-  queryAll(@Body() data: any, @Req() req) {
-    return this.articleService.queryAll(data, req.uid);
-  }
-
-  // // 管理员审核文章
-  // @Post('setAudit')
-  // @UseGuards(AuthGuard('jwt'))
-  // @Roles(Role.Admin)
-  // setAudit(@Body() param,) {
-  //   return this.articleService.setAudit(param);
-  // }
 }

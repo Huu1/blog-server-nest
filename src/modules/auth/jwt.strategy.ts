@@ -12,7 +12,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {
-    
+
     super({
       jwtFromRequest: ExtractJwt.fromHeader('token'),
       ignoreExpiration: false,
@@ -21,10 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: User) {
-    const user = this.userRepository.findOne({userId: payload.userId, password: payload.password});
-    if(!user) {
-      return false;
-    }
-    return { username: payload.username, password: payload.password};
+    const user = this.userRepository.findOne({ userId: payload.userId, password: payload.password });
+    return user ? true : false;
   }
 }

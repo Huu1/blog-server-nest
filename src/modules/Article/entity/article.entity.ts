@@ -1,10 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, OneToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, OneToOne, OneToMany } from 'typeorm';
 import { Label } from 'src/modules/Classic/entity/label.entity';
 import { Tag } from 'src/modules/Classic/entity/tag.entity';
 import { User } from 'src/modules/user/entity/user.entity';
 import { ArticleContent } from './articleContent.entity';
 import { Comment } from 'src/modules/Comment/entity/comment.entity';
-import { Like } from 'src/modules/Like/entity/like.entity';
+// import { Like } from 'src/modules/Like/entity/like.entity';
 
 @Entity()
 export class Article {
@@ -23,16 +23,12 @@ export class Article {
   @Column({ default: '' })
   background: string;
 
-  // 1:草稿  2:待审核  3:已发布  4:驳回
+  // 1:草稿   2：发布
   @Column({ default: 1 })
   status: number;
 
   @Column({ type: 'double', default: new Date().valueOf() })
   createTime: number;
-
-  // 最后编辑时间
-  @Column({ type: 'double', default: new Date().valueOf() })
-  lastUpdateTime: number;
 
   // 发布时间
   @Column({ type: 'double', default: 0 })
@@ -41,12 +37,6 @@ export class Article {
   // 访问次数
   @Column({ default: 0 })
   viewNum: number;
-
-  @Column({ default: '' })
-  rejectInfo: string;
-
-  @Column({ default: 1 })
-  readTime: number;
 
   @OneToOne(() => ArticleContent, content => content.article, {
     cascade: true,
@@ -65,10 +55,11 @@ export class Article {
   @ManyToMany(() => Label, (Label) => Label.article)
   label: Label[];
 
+  // 评论
   @OneToMany(() => Comment, comment => comment.article)
   comment: Comment[];
 
-  // 点赞
-  @OneToMany(() => Like, like => like.article)
-  like: Like[];
+  // // 点赞
+  // @OneToMany(() => Like, like => like.article)
+  // like: Like[];
 }

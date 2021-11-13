@@ -29,6 +29,6 @@ export class Comment {
   @OneToMany(() => Replay, replay => replay.comment)
   replay: Replay[];
 
-  @OneToMany(() => Like, like => like.comment)
-  like: Like[];
+  // @OneToMany(() => Like, like => like.comment)
+  // like: Like[];
 }

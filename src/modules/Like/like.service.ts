@@ -44,7 +44,7 @@ export class LikeService {
           };
         }
         like.article = article;
-        like.user = user;
+        // like.user = user;
         this.likeRepository.save(like);
         return {
           code: 0,
