@@ -281,16 +281,16 @@ export class ArticleService {
   // }
 
   async getAllPublishArticle(data: any) {
-    const { pageSize = 5, current = 1, uid } = data;
+    const { pageSize = 5, current = 1, uid, tagId } = data;
 
     const result = await getRepository(Article)
       .createQueryBuilder("article")
       .leftJoinAndSelect("article.user", "user")
       .leftJoinAndSelect("article.label", "label")
-      .leftJoinAndSelect("article.tag", "tag")
-      // .leftJoin("article.like", "like")
+      .innerJoinAndSelect("article.tag", "tag")
       .where("user.userId = :userId", { userId: uid })
       .andWhere("article.status = :status", { status: postStatus.publish })
+      .andWhere('tag.tagId=:tagId', { tagId })
       .orderBy("article.createTime", "DESC")
       .skip(pageSize * (current - 1))
       .take(pageSize)

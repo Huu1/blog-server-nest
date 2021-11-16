@@ -9,7 +9,6 @@ import { addArticleDto, ArticleDto, publishDto } from './article.dto';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
 
 @Controller('article')
 export class ArticleController {
