@@ -8,6 +8,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
+import { createUserDto } from './user.dto';
 
 @Controller('user')
 @UseGuards(AuthGuard('jwt'))
@@ -40,10 +41,7 @@ export class UserController {
     return this.userService.jurisdiction(userId);
   }
 
-  @Delete()
-  delUser(@Query() { uid, psw, did }) {
-    return this.userService.delUser(uid, psw, did);
-  }
+
 
   @Get('/findByName')
   getUsersByName(@Query('username') username: string) {
@@ -57,4 +55,21 @@ export class UserController {
     return this.userService.setUserAvatar({ ...user, uid: req.uid }, file);
   }
 
+  @Get('findAll')
+  @Roles(Role.Admin)
+  getUserList() {
+    return this.userService.getUserList();
+  }
+
+  @Post('status')
+  @Roles(Role.Admin)
+  setUserStatus(@Body() { uid }) {
+    return this.userService.setUserStatus(uid);
+  }
+
+  @Post('create')
+  @Roles(Role.Admin)
+  createUser(@Body() user: createUserDto) {
+    return this.userService.createUser(user);
+  }
 }

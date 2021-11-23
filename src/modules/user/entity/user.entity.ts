@@ -27,6 +27,10 @@ export class User {
   @Column({ default: 'user' })
   role: string;
 
+  // 1启动 0禁用
+  @Column({ default: 1 })
+  status: number;
+
   @Column({ type: 'double', default: new Date().valueOf() })
   createTime: number;
 

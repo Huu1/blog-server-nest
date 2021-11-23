@@ -94,32 +94,18 @@ export class UserService {
     }
   }
 
-  async delUser(uid: string, psw: string, did: string) {
-    // try {
-    //   const user = await this.userRepository.findOne({userId: uid, password: psw});
-    //   if(user.role === 'admin' && user.username === '陈冠希') {
-    //     // 被删用户自己创建的群
-    //     const groups = await this.groupRepository.find({userId: did});
-    //     for(const group of groups) {
-    //       await this.groupRepository.delete({groupId: group.groupId});
-    //       await this.groupUserRepository.delete({groupId: group.groupId});
-    //       await this.groupMessageRepository.delete({groupId: group.groupId});
-    //     }
-    //     // 被删用户加入的群
-    //     await this.groupUserRepository.delete({userId: did});
-    //     await this.groupMessageRepository.delete({userId: did});
-    //     // 被删用户好友
-    //     await this.friendRepository.delete({userId: did});
-    //     await this.friendRepository.delete({friendId: did});
-    //     await this.friendMessageRepository.delete({userId: did});
-    //     await this.friendMessageRepository.delete({friendId: did});
-    //     await this.userRepository.delete({userId: did});
-    //     return { msg: '用户删除成功'};
-    //   }
-    //   return {code: RCode.FAIL, msg:'用户删除失败'};
-    // } catch(e) {
-    //   return {code: RCode.ERROR, msg:'用户删除失败', data: e};
-    // }
+  async setUserStatus(uid) {
+    try {
+      const user = await this.userRepository.findOne({ userId: uid });
+      if (user.role === 'admin') {
+        return { code: RCode.ERROR, msg: '禁止对管理员操作' };
+      }
+      user.status = user.status === 0 ? 1 : 0;
+      await this.userRepository.save(user);
+      return {};
+    } catch (e) {
+      return { code: RCode.ERROR, msg: '系统异常' };
+    }
   }
 
   async getUsersByName(username: string) {
@@ -137,7 +123,7 @@ export class UserService {
   }
 
   async setUserAvatar({ uid }, file) {
-    const newUser = await this.userRepository.findOne({ userId: uid});
+    const newUser = await this.userRepository.findOne({ userId: uid });
     if (newUser) {
       try {
         const random = Date.now() + '&';
@@ -152,6 +138,31 @@ export class UserService {
 
     } else {
       return { code: RCode.FAIL, msg: '修改头像失败' };
+    }
+  }
+
+
+  async getUserList() {
+    try {
+      const result = await this.userRepository.findAndCount();
+      return {
+        data: result[0]
+      };
+    } catch (error) {
+      return { code: RCode.FAIL, msg: '异常' };
+    }
+  }
+
+  async createUser(user) {
+    try {
+      const hasOne = await this.userRepository.findOne({ username: user.username });
+      if (hasOne) {
+        return { code: RCode.ERROR, msg: '用户名已存在' };
+      }
+      await this.userRepository.save(user);
+      return {};
+    } catch (e) {
+      return { code: RCode.ERROR, msg: '系统异常' };
     }
   }
 }

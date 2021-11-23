@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ArticleService } from './article.service';
-import { addArticleDto, ArticleDto, publishDto } from './article.dto';
+import { addArticleDto, ArticleDto, momentsDto, publishDto } from './article.dto';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -40,7 +40,7 @@ export class ArticleController {
     return this.articleService.deleteArticle({ ...article, uid: req.uid });
   }
 
-  // 传用户id 获取所有已发布的文章
+  // 获取所有已发布的文章
   @Get('queryAllPublish')
   getAllPublishArticle(@Query() data) {
     return this.articleService.getAllPublishArticle(data);
@@ -60,12 +60,21 @@ export class ArticleController {
     return this.articleService.queryAll(data, req.uid);
   }
 
-  //  用户发布文章
+  //  发布文章
   @Post('pushlish')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
   @UseInterceptors(FileInterceptor('file'))
   userPublishArticle(@Body() article: publishDto, @UploadedFile() file, @Req() req) {
     return this.articleService.userPublishArticle({ ...article, uid: req.uid }, file);
+  }
+
+  //  发表动态
+  @Post('moments')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  @UseInterceptors(FileInterceptor('file'))
+  moments(@Body() article: momentsDto, @UploadedFile() file, @Req() req) {
+    return this.articleService.moments({ ...article, uid: req.uid }, file);
   }
 }

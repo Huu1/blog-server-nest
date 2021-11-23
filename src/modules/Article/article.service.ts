@@ -6,10 +6,14 @@ import { Echo, RCode } from 'src/common/constant/rcode';
 import { addArticleDto, ArticleDto, postStatus } from './article.dto';
 import { createWriteStream } from 'fs';
 import { join } from 'path';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const path = require('path');
 import { Tag } from '../Classic/entity/tag.entity';
 import { Label } from '../Classic/entity/label.entity';
 import { User } from '../user/entity/user.entity';
 import { ArticleContent } from './entity/articleContent.entity';
+import { Meta, MetaType } from './entity/meta.entity';
 // import { Like } from '../Like/entity/like.entity';
 
 @Injectable()
@@ -25,6 +29,8 @@ export class ArticleService {
     private readonly labelRepository: Repository<Label>,
     @InjectRepository(ArticleContent)
     private readonly articleContentRepository: Repository<ArticleContent>,
+    @InjectRepository(Meta)
+    private readonly metaRepository: Repository<Meta>,
   ) { }
 
   async findOneArticle(id: string) {
@@ -118,8 +124,8 @@ export class ArticleService {
       const article = await getRepository(Article)
         .createQueryBuilder('article')
         // 用户匹配
-        .innerJoin('article.user', 'user', 'user.userId = :userId', { userId: uid })
-        .innerJoinAndSelect('article.content', 'content')
+        .leftJoin('article.user', 'user', 'user.userId = :userId', { userId: uid })
+        .leftJoinAndSelect('article.content', 'content')
         // id匹配
         .where('article.articleId=:articleId', { articleId })
 
@@ -127,6 +133,8 @@ export class ArticleService {
         .andWhere('article.status=:status', { status: postStatus.draft })
         .getOne();
 
+
+      console.log(article);
 
       if (article) {
         await this.articleContentRepository.remove(article.content);
@@ -236,7 +244,7 @@ export class ArticleService {
       let background;
       try {
         const random = Date.now() + '&';
-        const stream = createWriteStream(join('public/article', random + file.originalname));
+        const stream = createWriteStream(path.resolve(__dirname, '../../../') + join('/public/article', random + file.originalname));
         stream.write(file.buffer);
         background = `public/article/${random}${file.originalname}`;
       } catch (error) {
@@ -265,36 +273,37 @@ export class ArticleService {
     }
   }
 
-  // async getAllDraft(userId: string) {
-  //   const user = await getRepository(User)
-  //     .createQueryBuilder("user")
-  //     .leftJoinAndSelect("user.article", "article", 'article.status= :status', { status: postStatus.draft })
-  //     .where("user.userId = :userId", { userId })
-  //     // .leftJoinAndSelect("article.tag", "tag")
-  //     .orderBy("article.createTime", "DESC")
-  //     .getOne();
-
-  //   return new Echo(
-  //     RCode.OK,
-  //     user.article || []
-  //   );
-  // }
-
   async getAllPublishArticle(data: any) {
-    const { pageSize = 5, current = 1, uid, tagId } = data;
+    const { pageSize = 5, current = 1, tagId } = data;
 
-    const result = await getRepository(Article)
-      .createQueryBuilder("article")
-      .leftJoinAndSelect("article.user", "user")
-      .leftJoinAndSelect("article.label", "label")
-      .innerJoinAndSelect("article.tag", "tag")
-      .where("user.userId = :userId", { userId: uid })
-      .andWhere("article.status = :status", { status: postStatus.publish })
-      .andWhere('tag.tagId=:tagId', { tagId })
-      .orderBy("article.createTime", "DESC")
-      .skip(pageSize * (current - 1))
-      .take(pageSize)
-      .getManyAndCount();
+    let result;
+    if (tagId) {
+      result = await getRepository(Article)
+        .createQueryBuilder("article")
+        .leftJoinAndSelect("article.user", "user")
+        .leftJoinAndSelect("article.label", "label")
+        .leftJoinAndSelect("article.meta", "meta")
+        .innerJoinAndSelect("article.tag", "tag")
+        .andWhere("article.status = :status", { status: postStatus.publish })
+        .andWhere('tag.tagId=:tagId', { tagId })
+        .orderBy("article.createTime", "DESC")
+        .skip(pageSize * (current - 1))
+        .take(pageSize)
+        .getManyAndCount();
+    } else {
+      result = await getRepository(Article)
+        .createQueryBuilder("article")
+        .leftJoinAndSelect("article.user", "user")
+        .leftJoinAndSelect("article.label", "label")
+        .leftJoinAndSelect("article.meta", "meta")
+        .leftJoinAndSelect("article.tag", "tag")
+        .andWhere("article.status = :status", { status: postStatus.publish })
+        .orderBy("article.createTime", "DESC")
+        .skip(pageSize * (current - 1))
+        .take(pageSize)
+        .getManyAndCount();
+    }
+
 
 
     return new Echo(
@@ -309,16 +318,16 @@ export class ArticleService {
   }
 
   async queryAll(data: any, userId: string) {
-    // status 0全部  1:草稿  2:已发布
+    // status  1:草稿  2:已发布
     const { current, pageSize, status, tid } = data;
 
     let result;
-    if (tid) {
+    if (tid === '0') {
       result = await getRepository(Article)
         .createQueryBuilder("result")
         .innerJoinAndSelect('result.user', 'user', 'user.userId = :userId', { userId })
-        .innerJoinAndSelect('result.tag', 'tag', 'tag.tagId = :tagId', { tagId: tid })
-        .where(status ? "result.status = :status" : "result.status != :status", { status })
+        .leftJoinAndSelect('result.tag', 'tag')
+        .where("result.status = :status", { status })
         .orderBy("result.createTime", "DESC")
         .skip(pageSize * (current - 1))
         .take(pageSize)
@@ -328,12 +337,15 @@ export class ArticleService {
         .createQueryBuilder("result")
         .innerJoinAndSelect('result.user', 'user', 'user.userId = :userId', { userId })
         .leftJoinAndSelect('result.tag', 'tag')
-        .where(status ? "result.status = :status" : "result.status != :status", { status })
+        .where("result.status = :status", { status })
+        .andWhere('tag.tagId = :tagId', { tagId: tid })
         .orderBy("result.createTime", "DESC")
         .skip(pageSize * (current - 1))
         .take(pageSize)
         .getManyAndCount();
     }
+
+
 
     return new Echo(
       RCode.OK,
@@ -346,62 +358,38 @@ export class ArticleService {
     );
   }
 
-  // async getAllArticle(data) {
-  //   const { current, pageSize, status, tid } = data;
-  //   // status 0全部  1:草稿  2:待审核  3:已发布  4:驳回
+  async moments(data: any, file) {
+    // status  1:草稿  2:已发布
+    const { brief, tid = '1005', uid, type } = data;
+    const user = await this.userRepository.findOne({ userId: uid });
+    const tag = await this.tagRepository.findOne({ tagId: tid });
 
-  //   let result;
-  //   if (tid) {
-  //     result = await getRepository(Article)
-  //       .createQueryBuilder("result")
-  //       .innerJoinAndSelect('result.user', 'user')
-  //       .innerJoinAndSelect('result.tag', 'tag', 'tag.tagId = :tagId', { tagId: tid })
-  //       .where(status ? "result.status = :status" : "result.status != :status", { status })
-  //       .orderBy("result.createTime", "DESC")
-  //       .skip(pageSize * (current - 1))
-  //       .take(pageSize)
-  //       .getManyAndCount();
-  //   } else {
-  //     result = await getRepository(Article)
-  //       .createQueryBuilder("result")
-  //       .innerJoinAndSelect('result.user', 'user')
-  //       .leftJoinAndSelect('result.tag', 'tag')
-  //       .where(status ? "result.status = :status" : "result.status != :status", { status })
-  //       .orderBy("result.createTime", "DESC")
-  //       .skip(pageSize * (current - 1))
-  //       .take(pageSize)
-  //       .getManyAndCount();
-  //   }
+    const article = new Article();
+    article.user = user;
+    article.brief = brief;
+    article.tag = tag;
+    article.status = postStatus.publish;
 
-  //   return new Echo(
-  //     RCode.OK,
-  //     {
-  //       list: result[0],
-  //       total: result[1],
-  //       current,
-  //       pageSize
-  //     },
-  //   );
-  // }
+    const meta = new Meta();
+    try {
+      if (type == MetaType.music) {
+        meta.file = file;
+      } else {
+        const random = Date.now() + '&';
+        const stream = createWriteStream(path.resolve(__dirname, '../../../') + join('/public/article', random + file.originalname));
+        stream.write(file.buffer);
+        meta.file = `public/article/${random}${file.originalname}`;
+      }
 
-  // async setAudit(param) {
-  //   const { articleId, status: auditStatus, info } = param;
-  //   const target = await this.articleRepository.findOne({ status: postStatus.pendingCheck, articleId });
-  //   if (!target) {
-  //     return new Echo(
-  //       RCode.FAIL,
-  //       null,
-  //       '未找到此文章'
-  //     );
-  //   }
+      meta.article = article;
+      meta.type = type;
+      await this.metaRepository.save(meta);
+      await this.articleRepository.save(article);
+    } catch (error) {
+      console.log(error);
 
-  //   const status = auditStatus === 1 ? postStatus.publish : postStatus.reject;
-
-  //   await this.articleRepository.update(target, { ...target, rejectInfo: info, status });
-  //   return new Echo(
-  //     RCode.OK,
-  //     null,
-  //   );
-
-  // }
+      return { code: RCode.FAIL, msg: '上传失败' };
+    }
+    return {}
+  }
 }

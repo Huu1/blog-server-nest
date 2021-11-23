@@ -9,11 +9,12 @@ import { ArticleController } from './article.controller';
 import { ArticleService } from './article.service';
 import { Article } from './entity/article.entity';
 import { ArticleContent } from './entity/articleContent.entity';
+import { Meta } from './entity/meta.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Article, Tag, Label, User, ArticleContent]),
-    
+    TypeOrmModule.forFeature([Article, Tag, Label, User, ArticleContent, Meta]),
+
   ],
 
   providers: [ArticleService],
