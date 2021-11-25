@@ -219,7 +219,7 @@ export class ArticleService {
       try {
         LidList = JSON.parse(labelId);
 
-        for (const labelId of LidList) {
+        for await (const labelId of LidList) {
           const label = await this.labelRepository.findOne({ labelId });
 
           if (!label) {
@@ -358,8 +358,7 @@ export class ArticleService {
     );
   }
 
-  async moments(data: any, file) {
-    // status  1:草稿  2:已发布
+  async moments(data: any, files) {
     const { brief, tid = '1005', uid, type } = data;
     const user = await this.userRepository.findOne({ userId: uid });
     const tag = await this.tagRepository.findOne({ tagId: tid });
@@ -370,26 +369,26 @@ export class ArticleService {
     article.tag = tag;
     article.status = postStatus.publish;
 
-    const meta = new Meta();
+    const metas = [];
     try {
-      if (type == MetaType.music) {
-        meta.file = file;
-      } else {
+      files.forEach(file => {
+        const meta = new Meta();
         const random = Date.now() + '&';
         const stream = createWriteStream(path.resolve(__dirname, '../../../') + join('/public/article', random + file.originalname));
         stream.write(file.buffer);
         meta.file = `public/article/${random}${file.originalname}`;
+        meta.article = article;
+        meta.type = type;
+        metas.push(meta);
+      });
+      for await (const meta of metas) {
+        await this.metaRepository.save(meta);
       }
-
-      meta.article = article;
-      meta.type = type;
-      await this.metaRepository.save(meta);
       await this.articleRepository.save(article);
     } catch (error) {
       console.log(error);
-
       return { code: RCode.FAIL, msg: '上传失败' };
     }
-    return {}
+    return {};
   }
 }

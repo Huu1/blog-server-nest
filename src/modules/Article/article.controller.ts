@@ -1,14 +1,14 @@
 import {
   Controller, Post, Get,
   Body, Query, Param, UseInterceptors,
-  UploadedFile, UseGuards, Req
+  UploadedFile, UseGuards, Req, UploadedFiles
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ArticleService } from './article.service';
 import { addArticleDto, ArticleDto, momentsDto, publishDto } from './article.dto';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('article')
 export class ArticleController {
@@ -73,8 +73,8 @@ export class ArticleController {
   @Post('moments')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
-  @UseInterceptors(FileInterceptor('file'))
-  moments(@Body() article: momentsDto, @UploadedFile() file, @Req() req) {
-    return this.articleService.moments({ ...article, uid: req.uid }, file);
+  @UseInterceptors(FilesInterceptor('files'))
+  moments(@Body() article: momentsDto, @UploadedFiles() files, @Req() req) {
+    return this.articleService.moments({ ...article, uid: req.uid }, files);
   }
 }
