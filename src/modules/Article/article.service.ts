@@ -256,7 +256,7 @@ export class ArticleService {
           oldArticle.label = labelList;
           oldArticle.tag = hasTag;
           // oldArticle.readTime = oldArticle.content.content.length / 500;
-          await transactionalEntityManager.save(Article, { ...oldArticle, brief, background, status: postStatus.publish });
+          await transactionalEntityManager.save(Article, { ...oldArticle, brief,publishTime:Date.now(), background, status: postStatus.publish });
         });
       } catch (error) {
         return new Echo(
