@@ -7,7 +7,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Echo, RCode } from 'src/common/constant/rcode';
 import { getRepository, Repository } from 'typeorm';
 import { postStatus } from '../Article/article.dto';
-import { Article } from '../Article/entity/article.entity';
 import { Label } from './entity/label.entity';
 import { LabelDto } from './tag.dto';
 

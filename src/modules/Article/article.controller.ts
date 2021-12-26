@@ -1,20 +1,31 @@
 import {
-  Controller, Post, Get,
-  Body, Query, Param, UseInterceptors,
-  UploadedFile, UseGuards, Req, UploadedFiles
+  Controller,
+  Post,
+  Get,
+  Body,
+  Query,
+  Param,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
+  Req,
+  UploadedFiles,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ArticleService } from './article.service';
-import { addArticleDto, ArticleDto, momentsDto, publishDto } from './article.dto';
+import {
+  addArticleDto,
+  ArticleDto,
+  momentsDto,
+  publishDto,
+} from './article.dto';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('article')
 export class ArticleController {
-  constructor(
-    private readonly articleService: ArticleService
-  ) { }
+  constructor(private readonly articleService: ArticleService) {}
 
   // 新建一个草稿
   @Post('new')
@@ -46,6 +57,14 @@ export class ArticleController {
     return this.articleService.getAllPublishArticle(data);
   }
 
+  // 获取草稿列表
+  @Get('allDraft')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  getAllDraft(@Req() req) {
+    return this.articleService.getAllDraft(req.uid);
+  }
+
   //查询一篇文章
   @Get(':id')
   findOneArticle(@Param() { id }) {
@@ -65,8 +84,15 @@ export class ArticleController {
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
   @UseInterceptors(FileInterceptor('file'))
-  userPublishArticle(@Body() article: publishDto, @UploadedFile() file, @Req() req) {
-    return this.articleService.userPublishArticle({ ...article, uid: req.uid }, file);
+  userPublishArticle(
+    @Body() article: publishDto,
+    @UploadedFile() file,
+    @Req() req,
+  ) {
+    return this.articleService.userPublishArticle(
+      { ...article, uid: req.uid },
+      file,
+    );
   }
 
   //  发表动态
@@ -77,4 +103,11 @@ export class ArticleController {
   moments(@Body() article: momentsDto, @UploadedFiles() files, @Req() req) {
     return this.articleService.moments({ ...article, uid: req.uid }, files);
   }
+
+
+  @Get('near/:id')
+  getNearby(@Param() { id }) {
+    return this.articleService.getNearby(id);
+  }
+
 }

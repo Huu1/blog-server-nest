@@ -39,6 +39,10 @@ export class Article {
   @Column({ default: 0 })
   viewNum: number;
 
+  // 阅读时间
+  @Column({ default: 0 })
+  readTime: number;
+
   @OneToOne(() => ArticleContent, content => content.article, {
     cascade: true,
   })

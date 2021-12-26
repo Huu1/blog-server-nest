@@ -30,11 +30,17 @@ export class AuthService {
     }
     user.password = data.password;
     const payload = { userId: user.userId, roles: [user.role] };
+    const tagList = await this.tagRepository.find();
+    const labelList = await this.labelRepository.find();
     return {
       msg: '登录成功',
       data: {
         user: user,
-        token: this.jwtService.sign(payload)
+        token: this.jwtService.sign(payload),
+        appData: {
+          tagList,
+          labelList
+        },
       },
     };
   }
