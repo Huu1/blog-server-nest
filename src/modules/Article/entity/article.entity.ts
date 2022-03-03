@@ -28,7 +28,7 @@ export class Article {
   @Column({ default: 1 })
   status: number;
 
-  @Column({ type: 'double', default: new Date().valueOf() })
+  @Column({ type: 'double', default: new Date().valueOf()  })
   createTime: number;
 
   // 发布时间

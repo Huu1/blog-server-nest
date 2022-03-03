@@ -10,8 +10,15 @@ export class ArticleDto {
   articleId: string;
 }
 
+export class deleteArticlePublishDto {
+  @IsString()
+  @IsNotEmpty()
+  articleId: string;
+}
+
 export enum postStatus {
-  // 1:草稿  2:已发布  
+  // 0:发布被删除      1:草稿  2:已发布  
+  delete,
   draft,
   publish,
 }

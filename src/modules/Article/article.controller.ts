@@ -16,6 +16,7 @@ import { ArticleService } from './article.service';
 import {
   addArticleDto,
   ArticleDto,
+  deleteArticlePublishDto,
   momentsDto,
   publishDto,
 } from './article.dto';
@@ -51,6 +52,14 @@ export class ArticleController {
     return this.articleService.deleteArticle({ ...article, uid: req.uid });
   }
 
+  // 删除一个已发布的文章
+  @Post('delPublish')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  delPublishArticle(@Body() { articleId }: deleteArticlePublishDto) {
+    return this.articleService.delPublishArticle(articleId);
+  }
+
   // 获取所有已发布的文章
   @Get('queryAllPublish')
   getAllPublishArticle(@Query() data) {
@@ -71,7 +80,6 @@ export class ArticleController {
     return this.articleService.findOneArticle(id);
   }
 
-  //查询一篇文章
   @Post('queryAll')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
@@ -95,19 +103,8 @@ export class ArticleController {
     );
   }
 
-  //  发表动态
-  @Post('moments')
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.User)
-  @UseInterceptors(FilesInterceptor('files'))
-  moments(@Body() article: momentsDto, @UploadedFiles() files, @Req() req) {
-    return this.articleService.moments({ ...article, uid: req.uid }, files);
-  }
-
-
   @Get('near/:id')
   getNearby(@Param() { id }) {
     return this.articleService.getNearby(id);
   }
-
 }

@@ -154,6 +154,22 @@ export class ArticleService {
       return new Echo(RCode.ERROR, null, '系统异常');
     }
   }
+  async delPublishArticle(articleId) {
+    try {
+      const article = await this.articleRepository.findOne({
+        where: { articleId },
+      });
+      if (article && article.status === postStatus.publish) {
+        article.status = postStatus.delete;
+        await this.articleRepository.save(article);
+        return {};
+      } else {
+        return new Echo(RCode.FAIL, null, '文章不存在');
+      }
+    } catch (error) {
+      return new Echo(RCode.ERROR, null, '系统异常');
+    }
+  }
 
   async publishArticle(article: ArticleDto) {
     const { articleId } = article;
@@ -327,42 +343,42 @@ export class ArticleService {
     });
   }
 
-  async moments(data: any, files) {
-    const { brief, tid = '1005', uid, type } = data;
-    const user = await this.userRepository.findOne({ userId: uid });
-    const tag = await this.tagRepository.findOne({ tagId: tid });
+  // async moments(data: any, files) {
+  //   const { brief, tid = '1005', uid, type } = data;
+  //   const user = await this.userRepository.findOne({ userId: uid });
+  //   const tag = await this.tagRepository.findOne({ tagId: tid });
 
-    const article = new Article();
-    article.user = user;
-    article.brief = brief;
-    article.tag = tag;
-    article.status = postStatus.publish;
+  //   const article = new Article();
+  //   article.user = user;
+  //   article.brief = brief;
+  //   article.tag = tag;
+  //   article.status = postStatus.publish;
 
-    const metas = [];
-    try {
-      files.forEach(file => {
-        const meta = new Meta();
-        const random = Date.now() + '&';
-        const stream = createWriteStream(
-          path.resolve(__dirname, '../../../') +
-            join('/public/article', random + file.originalname),
-        );
-        stream.write(file.buffer);
-        meta.file = `public/article/${random}${file.originalname}`;
-        meta.article = article;
-        meta.type = type;
-        metas.push(meta);
-      });
-      for await (const meta of metas) {
-        await this.metaRepository.save(meta);
-      }
-      await this.articleRepository.save(article);
-    } catch (error) {
-      console.log(error);
-      return { code: RCode.FAIL, msg: '上传失败' };
-    }
-    return {};
-  }
+  //   const metas = [];
+  //   try {
+  //     files.forEach(file => {
+  //       const meta = new Meta();
+  //       const random = Date.now() + '&';
+  //       const stream = createWriteStream(
+  //         path.resolve(__dirname, '../../../') +
+  //           join('/public/article', random + file.originalname),
+  //       );
+  //       stream.write(file.buffer);
+  //       meta.file = `public/article/${random}${file.originalname}`;
+  //       meta.article = article;
+  //       meta.type = type;
+  //       metas.push(meta);
+  //     });
+  //     for await (const meta of metas) {
+  //       await this.metaRepository.save(meta);
+  //     }
+  //     await this.articleRepository.save(article);
+  //   } catch (error) {
+  //     console.log(error);
+  //     return { code: RCode.FAIL, msg: '上传失败' };
+  //   }
+  //   return {};
+  // }
   async getAllDraft(userId: string) {
     console.log(userId);
 

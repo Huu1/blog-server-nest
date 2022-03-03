@@ -28,7 +28,7 @@ export class User {
   role: string;
 
   // 1启动 0禁用
-  @Column({ default: 1 })
+  @Column({ default: 1 ,select: false})
   status: number;
 
   @Column({ type: 'double', default: new Date().valueOf() })
