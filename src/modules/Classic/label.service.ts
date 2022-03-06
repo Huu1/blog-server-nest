@@ -7,6 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Echo, RCode } from 'src/common/constant/rcode';
 import { getRepository, Repository } from 'typeorm';
 import { postStatus } from '../Article/article.dto';
+// import { Article } from '../Article/entity/article.entity';
+// import { User } from '../user/entity/user.entity';
 import { Label } from './entity/label.entity';
 import { LabelDto } from './tag.dto';
 
@@ -15,7 +17,7 @@ export class LabelService {
   constructor(
     @InjectRepository(Label)
     private readonly labelRepository: Repository<Label>,
-  ) { }
+  ) {}
 
   async addLabel(label: LabelDto) {
     const { title } = label;
@@ -24,28 +26,74 @@ export class LabelService {
       return {
         msg: '标题已存在',
         data: {},
-        code: 1
+        code: 1,
       };
     } else {
-      this.labelRepository.save(label);
+      const { labelId } = await this.labelRepository.save(label);
       return {
-        msg: "操作成功"
+        msg: '操作成功',
+        data: labelId,
       };
     }
+  }
+
+  async delLabel(labelId) {
+    const alreadyTag = await this.labelRepository.findOne({ labelId });
+
+    if (alreadyTag) {
+      try {
+        await this.labelRepository.remove(alreadyTag);
+        return {};
+      } catch (error) {
+        return {
+          code: RCode.FAIL,
+          msg: '删除失败',
+        };
+      }
+    } else {
+      return {
+        code: RCode.FAIL,
+        msg: '不存在',
+      };
+    }
+  }
+
+  async CountArticleOfLabel() {
+    const res = await getRepository(Label)
+      .createQueryBuilder('label')
+      .leftJoin('label.article', 'article')
+      .select('label.title', 'title')
+      .addSelect('label.labelId', 'id')
+      .addSelect('COUNT(articleId)', 'count')
+      .where('article.status =:status', { status: postStatus.publish })
+      .groupBy('label.labelId')
+      .getRawMany();
+
+    return new Echo(RCode.OK, res);
   }
 
   async getArticleBylabelId(labelId: string) {
     const res = await getRepository(Label)
       .createQueryBuilder('label')
-      .leftJoinAndSelect('label.article', 'article', 'article.status =:status', { status: postStatus.publish })
-      .innerJoinAndSelect('article.user', 'user')
+      .leftJoinAndSelect(
+        'label.article',
+        'article',
+        'article.status =:status',
+        { status: postStatus.publish },
+      )
       .leftJoinAndSelect('article.tag', 'tag')
       .where('label.labelId = :labelId', { labelId })
       .getOne();
 
-    return new Echo(
-      RCode.OK,
-      res
-    );
+    return new Echo(RCode.OK, res);
+  }
+
+  async getAllLabel() {
+    const res = await getRepository(Label)
+      .createQueryBuilder('label')
+      .select(['label.labelId', 'label.title'])
+      .getMany();
+
+    return new Echo(RCode.OK, res);
   }
 }

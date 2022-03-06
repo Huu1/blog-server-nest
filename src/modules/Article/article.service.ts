@@ -39,6 +39,9 @@ export class ArticleService {
       where: { articleId: id },
     });
 
+    console.log(article);
+    
+
     if (article) {
       let next, previous;
       if (article.status === postStatus.publish) {

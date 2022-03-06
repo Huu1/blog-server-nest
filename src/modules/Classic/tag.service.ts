@@ -15,7 +15,7 @@ export class TagService {
   constructor(
     @InjectRepository(Tag)
     private readonly tagRepository: Repository<Tag>,
-  ) { }
+  ) {}
 
   async addTag(tag: TagDto) {
     const { title } = tag;
@@ -23,29 +23,71 @@ export class TagService {
     if (alreadyTag) {
       return {
         msg: '标题已存在',
-        data: {},
-        code: 1
+        code: 1,
       };
     } else {
-      this.tagRepository.save(tag);
+      const { tagId } = await this.tagRepository.save(tag);
       return {
-        msg: "操作成功"
+        data: tagId,
+        msg: '操作成功',
       };
     }
   }
 
-  async getArticleBylabelId(tagId: string) {
+  async delTag(tagId) {
+    const alreadyTag = await this.tagRepository.findOne({ tagId });
+
+    if (alreadyTag) {
+      try {
+        await this.tagRepository.remove(alreadyTag);
+        return {};
+      } catch (error) {
+        return {
+          code: RCode.FAIL,
+          msg: '删除失败',
+        };
+      }
+    } else {
+      return {
+        code: RCode.FAIL,
+        msg: '不存在',
+      };
+    }
+  }
+
+  async CountArticleOfTag() {
     const res = await getRepository(Tag)
       .createQueryBuilder('tag')
-      .leftJoinAndSelect('tag.article', 'article', 'article.status =:status', { status: postStatus.publish })
-      .innerJoinAndSelect('article.user', 'user')
+      .leftJoin('tag.article', 'article')
+      .select('tag.title', 'title')
+      .addSelect('tag.tagId', 'id')
+      .addSelect('COUNT(articleId)', 'count')
+      .where('article.status =:status', { status: postStatus.publish })
+      .groupBy('tag.tagId')
+      .getRawMany();
+
+    return new Echo(RCode.OK, res);
+  }
+
+  async getAllTag() {
+    const res = await getRepository(Tag)
+      .createQueryBuilder('tag')
+      .select(['tag.tagId', 'tag.title'])
+      .getMany();
+
+    return new Echo(RCode.OK, res);
+  }
+
+  async getArticleByTagId(tagId: string) {
+    const res = await getRepository(Tag)
+      .createQueryBuilder('tag')
+      .leftJoinAndSelect('tag.article', 'article', 'article.status =:status', {
+        status: postStatus.publish,
+      })
       .leftJoinAndSelect('article.label', 'label')
       .where('tag.tagId = :tagId', { tagId })
       .getOne();
 
-    return new Echo(
-      RCode.OK,
-      res
-    );
+    return new Echo(RCode.OK, res);
   }
 }

@@ -1,13 +1,20 @@
+import { IsNotEmpty, IsString } from "class-validator";
+
 export class TagDto {
-  tagId: string;
+  @IsString()
+  @IsNotEmpty()
   title: string;
+
+  @IsString()
+  @IsNotEmpty()
   content: string;
-  status: string;
 }
 
 export class LabelDto {
-  labelId: string;
+  @IsString()
+  @IsNotEmpty()
   title: string;
+  @IsString()
+  @IsNotEmpty()
   content: string;
-  status: string;
 }
