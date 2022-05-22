@@ -58,11 +58,10 @@ export class TagService {
   async CountArticleOfTag() {
     const res = await getRepository(Tag)
       .createQueryBuilder('tag')
-      .leftJoin('tag.article', 'article')
+      .leftJoin('tag.article', 'article','article.status =:status', { status: postStatus.publish })
       .select('tag.title', 'title')
       .addSelect('tag.tagId', 'id')
       .addSelect('COUNT(articleId)', 'count')
-      .where('article.status =:status', { status: postStatus.publish })
       .groupBy('tag.tagId')
       .getRawMany();
 

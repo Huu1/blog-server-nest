@@ -6,7 +6,7 @@ export class ArticleContent {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: "text" })
+  @Column({ type: "longtext" })
   content: string;
 
   @OneToOne(() => Article, article => article.content)

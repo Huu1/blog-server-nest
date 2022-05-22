@@ -61,11 +61,10 @@ export class LabelService {
   async CountArticleOfLabel() {
     const res = await getRepository(Label)
       .createQueryBuilder('label')
-      .leftJoin('label.article', 'article')
+      .leftJoinAndSelect('label.article', 'article','article.status =:status', { status: postStatus.publish })
       .select('label.title', 'title')
       .addSelect('label.labelId', 'id')
       .addSelect('COUNT(articleId)', 'count')
-      .where('article.status =:status', { status: postStatus.publish })
       .groupBy('label.labelId')
       .getRawMany();
 
