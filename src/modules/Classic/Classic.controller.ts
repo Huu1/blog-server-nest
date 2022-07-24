@@ -60,9 +60,9 @@ export class ClassicController {
     return this.labelService.getAllLabel();
   }
   // 获取此标签下的所有文章
-  @Get('label/:id')
-  async getArticleBylabelId(@Param() { id }: any) {
-    return this.labelService.getArticleBylabelId(id);
+  @Get('label/:title')
+  async getArticleBylabelId(@Param() { title }: any) {
+    return this.labelService.getArticleBylabelId(title);
   }
 
   // 统计各分类下的文章个数
@@ -76,8 +76,8 @@ export class ClassicController {
     return this.tagService.getAllTag();
   }
   // 获取此分类的所有文章
-  @Get('tag/:id')
-  async getArticleByTagId(@Param() { id }: any) {
-    return this.tagService.getArticleByTagId(id);
+  @Get('tag/:title')
+  async getArticleByTagId(@Param() { title }: any) {
+    return this.tagService.getArticleByTagId(title);
   }
 }

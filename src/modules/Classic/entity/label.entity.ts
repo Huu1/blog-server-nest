@@ -18,6 +18,9 @@ export class Label {
   @Column({ default: 'magenta' })
   color: string;
 
+  @Column({ default: '' })
+  background: string;
+
   @Column({ type: 'double', default: new Date().valueOf() })
   createTime: number;
 

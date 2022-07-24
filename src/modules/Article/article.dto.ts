@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, isNumber, IsString, IS_ALPHA, MaxLength } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, isNumber, IsString, IS_ALPHA, MaxLength } from "class-validator";
 
 export class ArticleDto {
   title: string;
@@ -17,8 +17,8 @@ export class deleteArticlePublishDto {
 }
 
 export enum postStatus {
-  // 0:发布被删除      1:草稿  2:已发布  
-  delete,
+  // 0:     1:草稿            2:已发布  
+  delete, 
   draft,
   publish,
 }
@@ -42,16 +42,16 @@ export class publishDto {
   @IsNotEmpty()
   articleId: string;
 
-  @IsString()
-  @IsNotEmpty()
-  tid;
+  // @IsString()
+  // @IsNotEmpty()
+  // tid;
 
   @IsString()
   @MaxLength(100)
   @IsNotEmpty()
   brief;
 
-  @IsString()
+  @IsArray()
   @IsNotEmpty()
-  labelId;
+  labelIds;
 }

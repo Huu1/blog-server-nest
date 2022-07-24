@@ -15,6 +15,9 @@ export class Tag {
   @Column({ default: 'on' })
   status: string;
 
+  @Column({ default: '' })
+  background: string;
+  
   @Column({ default: 'magenta' })
   color: string;
 

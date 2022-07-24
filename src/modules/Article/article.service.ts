@@ -39,28 +39,31 @@ export class ArticleService {
       where: { articleId: id },
     });
 
-    console.log(article);
-    
-
     if (article) {
       let next, previous;
       if (article.status === postStatus.publish) {
         article.viewNum = article.viewNum + 1;
         await this.articleRepository.save(article);
-        next = await getRepository(Article)
+
+        previous = await getRepository(Article)
           .createQueryBuilder('article')
+          .leftJoinAndSelect('article.tag', 'tag')
           .where('article.status = :status', { status: postStatus.publish })
+          .andWhere('tag.tagId =:tagId', { tagId: article.tag.tagId })
           .orderBy('article.publishTime', 'DESC')
           .andWhere('article.publishTime < :publishTime', {
             publishTime: article.publishTime,
           })
           .limit(1)
           .getOne();
-        previous = await getRepository(Article)
+
+        next = await getRepository(Article)
           .createQueryBuilder('article')
+          .leftJoinAndSelect('article.tag', 'tag')
           .where('article.status = :status', { status: postStatus.publish })
+          .andWhere('tag.tagId =:tagId', { tagId: article.tag.tagId })
           .orderBy('article.publishTime', 'ASC')
-          .andWhere('article.publishTime > :publishTime', {
+          .andWhere('article.publishTime  >:publishTime', {
             publishTime: article.publishTime,
           })
           .limit(1)
@@ -157,6 +160,7 @@ export class ArticleService {
       return new Echo(RCode.ERROR, null, '系统异常');
     }
   }
+
   async delPublishArticle(articleId) {
     try {
       const article = await this.articleRepository.findOne({
@@ -193,8 +197,82 @@ export class ArticleService {
     }
   }
 
-  async userPublishArticle(article: any, file) {
-    const { articleId, tid, uid, brief, labelId = [] } = article;
+  // async userPublishArticle(article: any, file) {
+  //   const { articleId, tid, uid, brief, labelId = [] } = article;
+
+  //   const oldArticle = await getRepository(Article)
+  //     .createQueryBuilder('article')
+  //     .leftJoinAndSelect('article.user', 'user')
+  //     .leftJoinAndSelect('article.content', 'content')
+  //     .where('user.userId = :userId', { userId: uid })
+  //     .andWhere('article.articleId = :articleId', { articleId })
+  //     .andWhere('article.status = :status', { status: postStatus.draft })
+  //     .getOne();
+
+  //   if (!oldArticle) {
+  //     return new Echo(RCode.FAIL, null, '文章不存在');
+  //   }
+  //   const hasTag = await this.tagRepository.findOne({ tagId: tid });
+  //   if (!hasTag) {
+  //     return new Echo(RCode.FAIL, null, 'tag不存在');
+  //   }
+
+  //   // 标签列表
+  //   let LidList;
+  //   const labelList = [];
+  //   if (labelId) {
+  //     try {
+  //       LidList = JSON.parse(labelId);
+
+  //       for await (const labelId of LidList) {
+  //         const label = await this.labelRepository.findOne({ labelId });
+
+  //         if (!label) {
+  //           return new Echo(RCode.FAIL, null, '要添加的label不存在');
+  //         }
+  //         labelList.push(label);
+  //       }
+  //     } catch (error) {
+  //       return new Echo(RCode.FAIL, null, 'label查询发生错误');
+  //     }
+  //   }
+
+  //   if (oldArticle) {
+  //     let background;
+  //     if (file) {
+  //       try {
+  //         const random = Date.now() + '&';
+  //         const stream = createWriteStream(
+  //           path.resolve(__dirname, '../../../') +
+  //             join('/public/article', random + file.originalname),
+  //         );
+  //         stream.write(file.buffer);
+  //         background = `public/article/${random}${file.originalname}`;
+  //       } catch (error) {
+  //         return { code: RCode.FAIL, msg: '上传图片失败' };
+  //       }
+  //     }
+  //     try {
+  //       await getConnection().transaction(async transactionalEntityManager => {
+  //         oldArticle.label = labelList;
+  //         oldArticle.tag = hasTag;
+  //         oldArticle.readTime = oldArticle.content.content.length / 500;
+  //         await transactionalEntityManager.save(Article, {
+  //           ...oldArticle,
+  //           brief,
+  //           publishTime: Date.now(),
+  //           background,
+  //           status: postStatus.publish,
+  //         });
+  //       });
+  //     } catch (error) {
+  //       return new Echo(RCode.FAIL, null, '发布异常');
+  //     }
+  //     return new Echo(RCode.OK, null, '发布成功');
+  //   }
+  // }
+  async userPublishArticle(article: any) {
+    const { articleId, tid, uid, brief, labelIds = [], background } = article;
 
     const oldArticle = await getRepository(Article)
       .createQueryBuilder('article')
@@ -208,19 +286,23 @@ export class ArticleService {
     if (!oldArticle) {
       return new Echo(RCode.FAIL, null, '文章不存在');
     }
-    const hasTag = await this.tagRepository.findOne({ tagId: tid });
-    if (!hasTag) {
-      return new Echo(RCode.FAIL, null, 'tag不存在');
+
+    // 系列
+    let Tag;
+    if (tid) {
+      Tag = await this.tagRepository.findOne({ tagId: tid });
+      if (!Tag) {
+        return new Echo(RCode.FAIL, null, 'tag不存在');
+      }
+      oldArticle.tag = Tag;
     }
 
     // 标签列表
-    let LidList;
     const labelList = [];
-    if (labelId) {
-      try {
-        LidList = JSON.parse(labelId);
 
-        for await (const labelId of LidList) {
+    if (labelIds) {
+      try {
+        for await (const labelId of labelIds) {
           const label = await this.labelRepository.findOne({ labelId });
 
           if (!label) {
@@ -234,24 +316,9 @@ export class ArticleService {
     }
 
     if (oldArticle) {
-      let background;
-      if (file) {
-        try {
-          const random = Date.now() + '&';
-          const stream = createWriteStream(
-            path.resolve(__dirname, '../../../') +
-              join('/public/article', random + file.originalname),
-          );
-          stream.write(file.buffer);
-          background = `public/article/${random}${file.originalname}`;
-        } catch (error) {
-          return { code: RCode.FAIL, msg: '上传图片失败' };
-        }
-      }
       try {
         await getConnection().transaction(async transactionalEntityManager => {
           oldArticle.label = labelList;
-          oldArticle.tag = hasTag;
           oldArticle.readTime = oldArticle.content.content.length / 500;
           await transactionalEntityManager.save(Article, {
             ...oldArticle,
@@ -269,7 +336,14 @@ export class ArticleService {
   }
 
   async getAllPublishArticle(data: any) {
-    const { pageSize = 5, current = 1, tagId, title, labelId } = data;
+    const {
+      pageSize = 5,
+      current = 1,
+      tagId,
+      title,
+      labelId,
+      notag = false,
+    } = data;
     const qb = () => {
       return getRepository(Article)
         .createQueryBuilder('article')
@@ -288,6 +362,8 @@ export class ArticleService {
       });
     } else if (labelId) {
       query = qb().andWhere('label.labelId=:labelId', { labelId });
+    } else if (notag) {
+      query = qb().andWhere('article.tag is null');
     } else {
       query = qb();
     }

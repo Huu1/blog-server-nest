@@ -29,7 +29,7 @@ export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
   // 新建一个草稿
-  @Post('new')
+  @Post('write')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
   addArticle(@Body() article: addArticleDto, @Req() req) {
@@ -87,6 +87,22 @@ export class ArticleController {
     return this.articleService.queryAll(data, req.uid);
   }
 
+  // //  发布文章
+  // @Post('pushlish-old')
+  // @UseGuards(AuthGuard('jwt'))
+  // @Roles(Role.User)
+  // @UseInterceptors(FileInterceptor('file'))
+  // userPublishArticle(
+  //   @Body() article: publishDto,
+  //   @UploadedFile() file,
+  //   @Req() req,
+  // ) {
+  //   return this.articleService.userPublishArticle(
+  //     { ...article, uid: req.uid },
+  //     file,
+  //   );
+  // }
+
   //  发布文章
   @Post('pushlish')
   @UseGuards(AuthGuard('jwt'))
@@ -94,12 +110,10 @@ export class ArticleController {
   @UseInterceptors(FileInterceptor('file'))
   userPublishArticle(
     @Body() article: publishDto,
-    @UploadedFile() file,
     @Req() req,
   ) {
     return this.articleService.userPublishArticle(
       { ...article, uid: req.uid },
-      file,
     );
   }
 

@@ -2,6 +2,9 @@ import { Body, Controller, Get, HttpCode, Post, Req, Request, Res, UseGuards } f
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
+import { Roles } from './roles.decorator';
+import { Role } from './role.enum';
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
@@ -23,8 +26,10 @@ export class AuthController {
   }
 
   @Get('/getConfig')
-  async getAppData() {
-    return this.authService.getAppData();
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  async getAppData( @Req() req) {
+    return this.authService.getAppData(req.uid);
   }
 
 }

@@ -71,7 +71,7 @@ export class LabelService {
     return new Echo(RCode.OK, res);
   }
 
-  async getArticleBylabelId(labelId: string) {
+  async getArticleBylabelId(title: string) {
     const res = await getRepository(Label)
       .createQueryBuilder('label')
       .leftJoinAndSelect(
@@ -81,7 +81,7 @@ export class LabelService {
         { status: postStatus.publish },
       )
       .leftJoinAndSelect('article.tag', 'tag')
-      .where('label.labelId = :labelId', { labelId })
+      .where('label.title = :title', { title })
       .getOne();
 
     return new Echo(RCode.OK, res);

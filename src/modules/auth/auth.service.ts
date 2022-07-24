@@ -21,28 +21,26 @@ export class AuthService {
     @InjectRepository(Label)
     private readonly labelRepository: Repository<Label>,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async login(data: loginDto): Promise<any> {
-    console.log(data);
-    
-    const user = await this.userRepository.findOne({ username: data.username, password: data.password });
+    const user = await this.userRepository.findOne({
+      username: data.username,
+      password: data.password,
+    });
     if (!user) {
       return { code: 1, msg: '密码错误', data: '' };
     }
     user.password = data.password;
     const payload = { userId: user.userId, roles: [user.role] };
-    const tagList = await this.tagRepository.find();
-    const labelList = await this.labelRepository.find();
     return {
       msg: '登录成功',
       data: {
-        user: user,
         token: this.jwtService.sign(payload),
-        appData: {
-          tagList,
-          labelList
-        },
+        // appData: {
+        //   tagList,
+        //   labelList
+        // },
       },
     };
   }
@@ -79,12 +77,12 @@ export class AuthService {
             user,
             appData: {
               tagList,
-              labelList
+              labelList,
             },
-            version: 'v1.0'
+            version: 'v1.0',
           },
-          msg: "",
-          code: 0
+          msg: '',
+          code: 0,
         });
       }
       return res.status(HttpStatus.UNAUTHORIZED).send();
@@ -93,18 +91,19 @@ export class AuthService {
     }
   }
 
-  async getAppData(): Promise<any> {
+  async getAppData(userId): Promise<any> {
     const tagList = await this.tagRepository.find();
     const labelList = await this.labelRepository.find();
+    const user = await this.userRepository.findOne({ userId });
     return {
       data: {
+        user,
         appData: {
           tagList,
-          labelList
+          labelList,
         },
-        version: 'v1.0'
+        version: 'v1.0',
       },
     };
   }
-
 }

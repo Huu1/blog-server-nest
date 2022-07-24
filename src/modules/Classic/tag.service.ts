@@ -59,7 +59,7 @@ export class TagService {
     const res = await getRepository(Tag)
       .createQueryBuilder('tag')
       .leftJoin('tag.article', 'article','article.status =:status', { status: postStatus.publish })
-      .select('tag.title', 'title')
+      // .select('tag.title', 'title')
       .addSelect('tag.tagId', 'id')
       .addSelect('COUNT(articleId)', 'count')
       .groupBy('tag.tagId')
@@ -71,20 +71,21 @@ export class TagService {
   async getAllTag() {
     const res = await getRepository(Tag)
       .createQueryBuilder('tag')
-      .select(['tag.tagId', 'tag.title'])
+      // .select(['tag.tagId', 'tag.title'])
       .getMany();
 
     return new Echo(RCode.OK, res);
   }
 
-  async getArticleByTagId(tagId: string) {
+  async getArticleByTagId(title: string) {
     const res = await getRepository(Tag)
       .createQueryBuilder('tag')
       .leftJoinAndSelect('tag.article', 'article', 'article.status =:status', {
         status: postStatus.publish,
       })
       .leftJoinAndSelect('article.label', 'label')
-      .where('tag.tagId = :tagId', { tagId })
+      .where('tag.title = :title', { title })
+      .orderBy('article.publishTime', 'ASC')
       .getOne();
 
     return new Echo(RCode.OK, res);
