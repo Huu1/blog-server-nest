@@ -3,10 +3,7 @@ import { Label } from 'src/modules/Classic/entity/label.entity';
 import { Tag } from 'src/modules/Classic/entity/tag.entity';
 import { User } from 'src/modules/user/entity/user.entity';
 import { ArticleContent } from './articleContent.entity';
-import { Comment } from 'src/modules/Comment/entity/comment.entity';
 import { Meta } from './meta.entity';
-// import { Like } from 'src/modules/Like/entity/like.entity';
-
 @Entity()
 export class Article {
   @PrimaryGeneratedColumn("uuid")
@@ -60,9 +57,6 @@ export class Article {
   @ManyToMany(() => Label, (Label) => Label.article)
   label: Label[];
 
-  // 评论
-  @OneToMany(() => Comment, comment => comment.article)
-  comment: Comment[];
 
   // 媒体
   @OneToMany(() => Meta, meta => meta.article)
