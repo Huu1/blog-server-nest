@@ -1,7 +1,16 @@
 import {
-  Controller, Post, Get,
-  Body, Query, Patch, Param, Delete, UseInterceptors,
-  UploadedFile, UseGuards, Req
+  Controller,
+  Post,
+  Get,
+  Body,
+  Query,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -13,17 +22,12 @@ import { createUserDto } from './user.dto';
 @Controller('user')
 @UseGuards(AuthGuard('jwt'))
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Get()
   @Roles(Role.Admin)
   getUsers(@Query('uid') uid: string) {
     return this.userService.getUser(uid);
-  }
-
-  @Post()
-  postUsers(@Body('userIds') userIds: string) {
-    return this.userService.postUsers(userIds);
   }
 
   @Patch('username')
@@ -36,18 +40,6 @@ export class UserController {
     return this.userService.updatePassword(user, password);
   }
 
-  @Patch('/jurisdiction/:userId')
-  jurisdiction(@Param('userId') userId) {
-    return this.userService.jurisdiction(userId);
-  }
-
-
-
-  @Get('/findByName')
-  getUsersByName(@Query('username') username: string) {
-    return this.userService.getUsersByName(username);
-  }
-
   @Post('/avatar')
   @Roles(Role.User)
   @UseInterceptors(FileInterceptor('file'))
@@ -55,21 +47,10 @@ export class UserController {
     return this.userService.setUserAvatar({ ...user, uid: req.uid }, file);
   }
 
-  @Get('findAll')
-  @Roles(Role.Admin)
-  getUserList() {
-    return this.userService.getUserList();
-  }
-
-  @Post('status')
-  @Roles(Role.Admin)
-  setUserStatus(@Body() { uid }) {
-    return this.userService.setUserStatus(uid);
-  }
-
-  @Post('create')
-  @Roles(Role.Admin)
-  createUser(@Body() user: createUserDto) {
-    return this.userService.createUser(user);
+  @Get('currentUser')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  getUser(@Req() req) {
+    return this.userService.getUser(req.uid);
   }
 }

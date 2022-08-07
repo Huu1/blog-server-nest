@@ -1,17 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Label } from '../Classic/entity/label.entity';
-import { Tag } from '../Classic/entity/tag.entity';
+import { Series } from '../Series/entity/series.entity';
+import { Tag } from '../Tag/entity/tag.entity';
 import { User } from '../user/entity/user.entity';
 import { ArticleController } from './article.controller';
 import { ArticleService } from './article.service';
 import { Article } from './entity/article.entity';
 import { ArticleContent } from './entity/articleContent.entity';
-import { Meta } from './entity/meta.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Article, Tag, Label, User, ArticleContent, Meta]),
+    TypeOrmModule.forFeature([Article, Tag, Series , User, ArticleContent]),
   ],
 
   providers: [ArticleService],

@@ -1,12 +1,18 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, OneToOne, OneToMany } from 'typeorm';
-import { Label } from 'src/modules/Classic/entity/label.entity';
-import { Tag } from 'src/modules/Classic/entity/tag.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  ManyToMany,
+  OneToOne,
+} from 'typeorm';
 import { User } from 'src/modules/user/entity/user.entity';
 import { ArticleContent } from './articleContent.entity';
-import { Meta } from './meta.entity';
+import { Series } from 'src/modules/Series/entity/series.entity';
+import { Tag } from 'src/modules/Tag/entity/tag.entity';
 @Entity()
 export class Article {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   articleId: string;
 
   // 文章标题
@@ -25,7 +31,7 @@ export class Article {
   @Column({ default: 1 })
   status: number;
 
-  @Column({ type: 'double', default: new Date().valueOf()  })
+  @Column({ type: 'double', default: new Date().valueOf() })
   createTime: number;
 
   // 发布时间
@@ -40,25 +46,37 @@ export class Article {
   @Column({ default: 0 })
   readTime: number;
 
-  @OneToOne(() => ArticleContent, content => content.article, {
-    cascade: true,
-  })
+  @OneToOne(
+    () => ArticleContent,
+    content => content.article,
+    {
+      cascade: true,
+    },
+  )
   content: ArticleContent;
 
   // 用户
-  @ManyToOne(() => User, user => user.article)
+  @ManyToOne(
+    () => User,
+    user => user.article,
+  )
   user: User;
 
-  // 分类
-  @ManyToOne(() => Tag, tag => tag.article)
-  tag: Tag;
+  // 系列
+  @ManyToOne(
+    () => Series,
+    series => series.article,
+  )
+  series: Series;
+  // 系列排序
+  @Column({ default: 0 })
+  sort: number;
 
   // 标签
-  @ManyToMany(() => Label, (Label) => Label.article)
-  label: Label[];
+  @ManyToMany(
+    () => Tag,
+    Tag => Tag.article,
+  )
+  tag: Tag[];
 
-
-  // 媒体
-  @OneToMany(() => Meta, meta => meta.article)
-  meta: Meta[];
 }

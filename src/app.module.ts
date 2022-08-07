@@ -1,10 +1,10 @@
-// import { LikeModule } from './modules/Like/like.module';
-import { ClassicModule } from './modules/Classic/classic.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ArticleModule } from './modules/Article/article.module';
+import { SeriesModule } from './modules/Series/series.module';
+import { TagModule } from './modules/Tag/tag.module';
 
 @Module({
   imports: [
@@ -22,7 +22,8 @@ import { ArticleModule } from './modules/Article/article.module';
     AuthModule,
     UserModule,
     ArticleModule,
-    ClassicModule,
+    SeriesModule,
+    TagModule
   ],
 })
 export class AppModule { }
