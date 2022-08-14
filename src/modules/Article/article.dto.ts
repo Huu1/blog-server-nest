@@ -21,6 +21,7 @@ export enum postStatus {
   delete, 
   draft,
   publish,
+  dustbin
 }
 
 export class addArticleDto {

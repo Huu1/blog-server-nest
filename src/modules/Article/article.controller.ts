@@ -55,13 +55,22 @@ export class ArticleController {
     return this.articleService.getPostList(data);
   }
 
-  // // 获取草稿列表
-  // @Get('allDraft')
-  // @UseGuards(AuthGuard('jwt'))
-  // @Roles(Role.User)
-  // getAllDraft(@Req() req) {
-  //   return this.articleService.getAllDraft(req.uid);
-  // }
+  // 获取 草稿箱/垃圾箱 列表
+  @Get('allDraft')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  getAllDraft(@Query() { status }) {
+    return this.articleService.getAllDraft(status);
+  }
+
+
+  // 获取 所有文章
+  @Get('allpost')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  getAllPost(@Query() params) {
+    return this.articleService.getAllPost(params);
+  }
 
   //查询 一篇post
   @Get(':id')

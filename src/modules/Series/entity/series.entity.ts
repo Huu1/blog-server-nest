@@ -1,9 +1,17 @@
 import { Article } from 'src/modules/Article/entity/article.entity';
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Media } from 'src/modules/media/entity/media.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 
 @Entity()
 export class Series {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ default: '' })
@@ -21,6 +29,13 @@ export class Series {
   @Column({ type: 'double', default: new Date().valueOf() })
   createTime: number;
 
-  @OneToMany(() => Article, article => article.series)
+  @OneToMany(
+    () => Article,
+    article => article.series,
+  )
   article: Article[];
+
+  @OneToOne(() => Media)
+  @JoinColumn()
+  media: Media;
 }

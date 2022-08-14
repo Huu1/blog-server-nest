@@ -25,12 +25,11 @@ export class TagService {
         };
       }
 
-      const { title, description, background, name } = data;
+      const { title, description, name } = data;
       const tag = new Tag();
 
       tag.title = title;
       tag.description = description;
-      tag.background = background;
       tag.name = name;
 
       const res = await this.tagRepository.save(tag);
@@ -60,16 +59,14 @@ export class TagService {
       }
 
       const isHad = await this.tagRepository.findOne({ name: data.name });
-      
 
-      if (isHad) {
+      if (tag.name !== data.name && isHad) {
         return {
           code: 1,
-          msg: 'tag name 已存在',
+          msg: 'name 已存在',
         };
       }
 
-      tag.background = data.background;
       tag.description = data.description;
       tag.title = data.title;
       tag.name = data.name;
@@ -113,7 +110,7 @@ export class TagService {
       }
 
       console.log(data);
-      
+
       return {
         data,
         code: RCode.OK,

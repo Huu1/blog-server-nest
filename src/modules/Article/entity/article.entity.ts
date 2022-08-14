@@ -5,11 +5,13 @@ import {
   ManyToOne,
   ManyToMany,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import { User } from 'src/modules/user/entity/user.entity';
 import { ArticleContent } from './articleContent.entity';
 import { Series } from 'src/modules/Series/entity/series.entity';
 import { Tag } from 'src/modules/Tag/entity/tag.entity';
+import { Media } from 'src/modules/media/entity/media.entity';
 @Entity()
 export class Article {
   @PrimaryGeneratedColumn('uuid')
@@ -26,6 +28,10 @@ export class Article {
   // 文章主图
   @Column({ default: '' })
   background: string;
+
+  @OneToOne(() => Media)
+  @JoinColumn()
+  midia: Media;
 
   // 1:草稿   2：发布
   @Column({ default: 1 })
@@ -78,5 +84,4 @@ export class Article {
     Tag => Tag.article,
   )
   tag: Tag[];
-
 }

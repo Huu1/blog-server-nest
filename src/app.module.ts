@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ArticleModule } from './modules/Article/article.module';
 import { SeriesModule } from './modules/Series/series.module';
 import { TagModule } from './modules/Tag/tag.module';
+import { Media } from './modules/media/entity/media.entity';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { TagModule } from './modules/Tag/tag.module';
     UserModule,
     ArticleModule,
     SeriesModule,
-    TagModule
+    TagModule,
+    Media
   ],
 })
 export class AppModule { }

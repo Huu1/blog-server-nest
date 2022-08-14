@@ -9,9 +9,6 @@ export class TagDto {
   description: string;
 
   @IsString()
-  background: string;
-
-  @IsString()
   name: string;
 
 }

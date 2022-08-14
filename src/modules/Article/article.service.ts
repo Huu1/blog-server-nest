@@ -422,18 +422,13 @@ export class ArticleService {
   //   }
   //   return {};
   // }
-  async getAllDraft(userId: string) {
-    console.log(userId);
-
+  async getAllDraft(status) {
     const res = await getRepository(Article)
       .createQueryBuilder('result')
-      .innerJoinAndSelect('result.user', 'user', 'user.userId = :userId', {
-        userId,
-      })
-      .where('result.status = :status', { status: postStatus.draft })
+      .leftJoinAndSelect('result.content', 'content')
+      .where('result.status = :status', { status })
       .orderBy('result.createTime', 'DESC')
       .getMany();
-
     return {
       data: res,
     };
@@ -464,6 +459,54 @@ export class ArticleService {
       data: {
         previous,
         next,
+      },
+    };
+  }
+
+  async getAllPost(params) {
+    console.log(params);
+
+    const {
+      pageSize = 20,
+      current = 1,
+      tagId,
+      seriesId,
+      status,
+      title,
+    } = params;
+
+    let fn = getRepository(Article)
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.tag', 'tag')
+      .leftJoinAndSelect('article.series', 'series');
+
+    if (tagId) {
+      fn = fn.andWhere('tag.id = :id', { id: tagId });
+    }
+    if (seriesId) {
+      fn = fn.andWhere('series.id = :id', { id: seriesId });
+    }
+
+    if (title) {
+      fn = fn.andWhere('article.title LIKE :title', {
+        title: `%${title}%`,
+      });
+    }
+
+    if (status) {
+      fn = fn.andWhere('article.status = :status', { status: +status });
+    }
+
+    const res = await fn
+      .orderBy('article.createTime', 'DESC')
+      .skip(pageSize * (current - 1))
+      .take(pageSize)
+      .getManyAndCount();
+
+    return {
+      data: {
+        list: res[0],
+        total: res[1],
       },
     };
   }

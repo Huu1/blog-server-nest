@@ -5,19 +5,17 @@ import {
   Body,
   Query,
   Patch,
-  Param,
-  Delete,
   UseInterceptors,
   UploadedFile,
   UseGuards,
   Req,
 } from '@nestjs/common';
+
 import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
-import { createUserDto } from './user.dto';
 
 @Controller('user')
 @UseGuards(AuthGuard('jwt'))

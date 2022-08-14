@@ -1,4 +1,4 @@
-import { IsString, MaxLength } from "class-validator";
+import { IsNotEmptyObject, IsString, MaxLength } from 'class-validator';
 
 export class SeriesDto {
   @IsString()
@@ -8,10 +8,12 @@ export class SeriesDto {
   @IsString()
   description: string;
 
-  @IsString()
-  background: string;
+  @IsNotEmptyObject()
+  media: {
+    url: string;
+    thumbUrl: string;
+  };
 
   @IsString()
   name: string;
-
 }

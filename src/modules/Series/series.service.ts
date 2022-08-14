@@ -8,6 +8,7 @@ import { Echo, RCode } from 'src/common/constant/rcode';
 import { getRepository, Repository } from 'typeorm';
 import { postStatus } from '../Article/article.dto';
 import { Article } from '../Article/entity/article.entity';
+import { Media } from '../media/entity/media.entity';
 import { Series } from './entity/series.entity';
 import { SeriesDto } from './series.dto';
 
@@ -16,6 +17,8 @@ export class SeriesService {
   constructor(
     @InjectRepository(Series)
     private readonly seriesRepository: Repository<Series>,
+    @InjectRepository(Media)
+    private readonly mediaRepository: Repository<Media>,
   ) {}
 
   async createSeries(data: SeriesDto) {
@@ -29,12 +32,17 @@ export class SeriesService {
         };
       }
 
-      const { title, description, background, name } = data;
+      const { title, description, name, media } = data;
       const newSeries = new Series();
 
+      const _media = new Media();
+      _media.url = media.url;
+      _media.thumbUrl = media.thumbUrl;
+
+      await this.mediaRepository.save(_media);
+      newSeries.media = _media;
       newSeries.title = title;
       newSeries.description = description;
-      newSeries.background = background;
       newSeries.name = name;
 
       const res = await this.seriesRepository.save(newSeries);
@@ -54,8 +62,10 @@ export class SeriesService {
   }
   async editSeries(id: string, data: SeriesDto) {
     try {
-      const series = await this.seriesRepository.findOne(id);
-
+      // 系列是否存在
+      const series = await this.seriesRepository.findOne(id, {
+        relations: ['media'],
+      });
       if (!series) {
         return {
           code: 1,
@@ -67,19 +77,31 @@ export class SeriesService {
       if (series.name !== data.name && isHad) {
         return {
           code: 1,
-          msg: '系列 name 已存在',
+          msg: 'name 已存在',
         };
       }
 
-      series.background = data.background;
       series.description = data.description;
       series.title = data.title;
       series.name = data.name;
+
+
+      await getRepository(Media)
+        .createQueryBuilder('media')
+        .update(Media)
+        .set({
+          url: data.media.url,
+          thumbUrl: data.media.thumbUrl,
+        })
+        .where('media.id = :id', { id: series.media.id })
+        .execute();
 
       await this.seriesRepository.save(series);
 
       return new Echo(RCode.OK);
     } catch (error) {
+      console.log(error);
+      
       return new Echo(RCode.FAIL, null, error.toString());
     }
   }
@@ -160,6 +182,7 @@ export class SeriesService {
         .leftJoin('series.article', 'article', 'article.status =:status', {
           status: postStatus.publish,
         })
+        .leftJoinAndSelect('series.media', 'media')
         .addSelect('COUNT(articleId)', 'count')
         .groupBy('series.id')
         .getRawMany();
