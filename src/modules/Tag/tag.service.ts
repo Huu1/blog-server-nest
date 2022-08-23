@@ -109,8 +109,6 @@ export class TagService {
         };
       }
 
-      console.log(data);
-
       return {
         data,
         code: RCode.OK,

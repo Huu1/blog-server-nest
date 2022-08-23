@@ -100,7 +100,6 @@ export class SeriesService {
 
       return new Echo(RCode.OK);
     } catch (error) {
-      console.log(error);
       
       return new Echo(RCode.FAIL, null, error.toString());
     }

@@ -31,7 +31,7 @@ export class Article {
 
   @OneToOne(() => Media)
   @JoinColumn()
-  midia: Media;
+  media: Media;
 
   // 1:草稿   2：发布
   @Column({ default: 1 })
@@ -84,4 +84,5 @@ export class Article {
     Tag => Tag.article,
   )
   tag: Tag[];
+
 }

@@ -3,11 +3,18 @@ import { Repository, getRepository, getConnection } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './entity/article.entity';
 import { Echo, RCode } from 'src/common/constant/rcode';
-import { addArticleDto, ArticleDto, postStatus } from './article.dto';
+import {
+  addArticleDto,
+  ArticleDto,
+  postStatus,
+  publishDto,
+} from './article.dto';
 
 import { User } from '../user/entity/user.entity';
 import { ArticleContent } from './entity/articleContent.entity';
 import { Tag } from '../Tag/entity/tag.entity';
+import { Series } from '../Series/entity/series.entity';
+import { Media } from '../media/entity/media.entity';
 
 @Injectable()
 export class ArticleService {
@@ -18,6 +25,10 @@ export class ArticleService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Tag)
     private readonly tagRepository: Repository<Tag>,
+    @InjectRepository(Series)
+    private readonly seriesRepository: Repository<Series>,
+    @InjectRepository(Media)
+    private readonly mediaRepository: Repository<Media>,
     @InjectRepository(ArticleContent)
     private readonly articleContentRepository: Repository<ArticleContent>,
   ) {}
@@ -103,6 +114,7 @@ export class ArticleService {
       article.user = user;
       article.title = title;
       article.content = articleContent;
+      article.createTime = Date.now();
       article.status = postStatus.draft;
       const res = await this.articleRepository.save(article);
       return new Echo(RCode.OK, {
@@ -211,8 +223,8 @@ export class ArticleService {
     }
   }
 
-  async userPublishArticle(article: any) {
-    const { articleId, tid, uid, brief, labelIds = [], background } = article;
+  async userPublishArticle(article: publishDto & { uid }) {
+    const { articleId, seriesId, uid, brief, tagIds = [], media } = article;
 
     const oldArticle = await getRepository(Article)
       .createQueryBuilder('article')
@@ -227,43 +239,46 @@ export class ArticleService {
       return new Echo(RCode.FAIL, null, '文章不存在');
     }
 
-    // 系列
-    let Tag;
-    // if (tid) {
-    //   Tag = await this.tagRepository.findOne({ tagId: tid });
-    //   if (!Tag) {
-    //     return new Echo(RCode.FAIL, null, 'tag不存在');
-    //   }
-    //   oldArticle.tag = Tag;
-    // }
+    if (seriesId) {
+      const series = await this.seriesRepository.findOne({ id: seriesId });
+      if (!series) {
+        return new Echo(RCode.FAIL, null, '系列不存在');
+      }
+      oldArticle.series = series;
+    }
 
     // 标签列表
-    const labelList = [];
-
-    if (labelIds) {
-      // try {
-      //   for await (const labelId of labelIds) {
-      //     const label = await this.labelRepository.findOne({ labelId });
-      //     if (!label) {
-      //       return new Echo(RCode.FAIL, null, '要添加的label不存在');
-      //     }
-      //     labelList.push(label);
-      //   }
-      // } catch (error) {
-      //   return new Echo(RCode.FAIL, null, 'label查询发生错误');
-      // }
+    const tagList = [];
+    if (tagIds) {
+      try {
+        for await (const id of tagIds) {
+          const tag = await this.tagRepository.findOne({ id });
+          if (!tag) {
+            return new Echo(RCode.FAIL, null, '要添加的label不存在');
+          }
+          tagList.push(tag);
+        }
+      } catch (error) {
+        return new Echo(RCode.FAIL, null, 'label查询发生错误');
+      }
     }
+
+    const _media = new Media();
+    _media.url = media.url;
+    _media.thumbUrl = media.thumbUrl;
+    await this.mediaRepository.save(_media);
 
     if (oldArticle) {
       try {
         await getConnection().transaction(async transactionalEntityManager => {
-          // oldArticle.label = labelList;
+          oldArticle.tag = tagList;
           oldArticle.readTime = oldArticle.content.content.length / 500;
+
           await transactionalEntityManager.save(Article, {
             ...oldArticle,
             brief,
             publishTime: Date.now(),
-            background,
+            media: _media,
             status: postStatus.publish,
           });
         });
@@ -361,29 +376,34 @@ export class ArticleService {
   }
 
   async getPostList(data: any) {
-    const {
-      // pageSize = 5,
-      // current = 1,
-      // tagId,
-      // title,
-      // labelId,
-      // notag = false,
-    } = data;
+    const { pageSize, current } = data;
     const qb = () => {
       return getRepository(Article)
         .createQueryBuilder('article')
         .leftJoinAndSelect('article.user', 'user')
         .leftJoinAndSelect('article.tag', 'tag')
         .leftJoinAndSelect('article.series', 'series')
+        .leftJoinAndSelect('article.media', 'media')
         .where('article.status = :status', { status: postStatus.publish })
-        .andWhere('article.series IS NULL');
+        .andWhere('article.series IS NULL')
+        .orderBy('article.createTime', 'DESC');
     };
 
-    const list = await qb().getMany();
-
-    return new Echo(RCode.OK, {
-      list,
-    });
+    if (pageSize && current) {
+      const list = await qb()
+        .skip(pageSize * (current - 1))
+        .take(pageSize)
+        .getManyAndCount();
+      
+      return new Echo(RCode.OK, {
+        list: list[0],
+      });
+    } else {
+      const list = await qb().getMany();
+      return new Echo(RCode.OK, {
+        list,
+      });
+    }
   }
 
   // async moments(data: any, files) {
@@ -464,7 +484,6 @@ export class ArticleService {
   }
 
   async getAllPost(params) {
-    console.log(params);
 
     const {
       pageSize = 20,
@@ -508,6 +527,22 @@ export class ArticleService {
         list: res[0],
         total: res[1],
       },
+    };
+  }
+
+  // 获取一篇草稿详情
+  async getDraft(id: string) {
+    const post = await getRepository(Article).findOne(id, {
+      relations: ['content'],
+      where: { status: postStatus.draft },
+    });
+
+    if (!post) {
+      return new Echo(RCode.FAIL, null, '文章不存在');
+    }
+
+    return {
+      data: { ...post },
     };
   }
 }

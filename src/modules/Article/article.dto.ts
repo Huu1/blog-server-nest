@@ -43,9 +43,10 @@ export class publishDto {
   @IsNotEmpty()
   articleId: string;
 
-  // @IsString()
-  // @IsNotEmpty()
-  // tid;
+  seriesId?;
+
+  @IsNotEmpty()
+  media;
 
   @IsString()
   @MaxLength(100)
@@ -54,5 +55,5 @@ export class publishDto {
 
   @IsArray()
   @IsNotEmpty()
-  labelIds;
+  tagIds;
 }

@@ -49,8 +49,8 @@ export class ArticleController {
     return this.articleService.deleteArticle({ ...article, uid: req.uid });
   }
 
-  // 获取所有已发布的文章
-  @Get('all')
+  // 获取post
+  @Get('post')
   getPostList(@Query() data) {
     return this.articleService.getPostList(data);
   }
@@ -62,7 +62,6 @@ export class ArticleController {
   getAllDraft(@Query() { status }) {
     return this.articleService.getAllDraft(status);
   }
-
 
   // 获取 所有文章
   @Get('allpost')
@@ -86,7 +85,7 @@ export class ArticleController {
   // }
 
   //  发布文章
-  @Post('pushlish')
+  @Post('publish')
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.User)
   @UseInterceptors(FileInterceptor('file'))
@@ -98,4 +97,11 @@ export class ArticleController {
   // getNearby(@Param() { id }) {
   //   return this.articleService.getNearby(id);
   // }
+
+  @Get('draft/:id')
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.User)
+  getDraft(@Param() { id }) {
+    return this.articleService.getDraft(id);
+  }
 }

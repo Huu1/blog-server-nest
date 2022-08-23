@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Media } from '../media/entity/media.entity';
 import { Series } from '../Series/entity/series.entity';
 import { Tag } from '../Tag/entity/tag.entity';
 import { User } from '../user/entity/user.entity';
@@ -10,7 +11,7 @@ import { ArticleContent } from './entity/articleContent.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Article, Tag, Series , User, ArticleContent]),
+    TypeOrmModule.forFeature([Article, Tag, Series , User, ArticleContent ,Media]),
   ],
 
   providers: [ArticleService],
