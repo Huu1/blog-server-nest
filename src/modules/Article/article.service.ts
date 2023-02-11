@@ -88,7 +88,6 @@ export class ArticleService {
       .leftJoinAndSelect('article.series', 'series')
       .where('article.articleId = :articleId', { articleId })
       .andWhere('article.status = :status', { status: postStatus.publish })
-      .andWhere('article.series IS NULL')
       .getOne();
 
     if (post) {
@@ -385,7 +384,6 @@ export class ArticleService {
         .leftJoinAndSelect('article.series', 'series')
         .leftJoinAndSelect('article.media', 'media')
         .where('article.status = :status', { status: postStatus.publish })
-        .andWhere('article.series IS NULL')
         .orderBy('article.createTime', 'DESC');
     };
 
@@ -400,6 +398,7 @@ export class ArticleService {
       });
     } else {
       const list = await qb().getMany();
+      
       return new Echo(RCode.OK, {
         list,
       });

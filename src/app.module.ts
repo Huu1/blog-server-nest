@@ -13,7 +13,7 @@ import { Media } from './modules/media/entity/media.entity';
       type: 'mysql',
       port: 3306,
       username: 'root',
-      password: 'root',
+      password: '123456',
       database: 'blog-nest',
       charset: "utf8", // 设置chatset编码为utf8mb4
       autoLoadEntities: true,
